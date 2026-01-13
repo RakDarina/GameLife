@@ -22,6 +22,14 @@
     </style>
 </head>
 <body>
+    
+    <div style="padding: 50px 20px 0; background: var(--bg);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="number" id="app-year" value="2026" oninput="saveYear()" 
+                style="font-size: 34px; font-weight: 800; border: none; background: transparent; width: 120px; outline: none;">
+            <span style="font-size: 24px;">✏️</span>
+        </div>
+    </div>
 
     <div id="app-viewport">
         </div>
@@ -34,28 +42,42 @@
     </nav>
 
     <script type="module">
-        // Функция загрузки модулей
-        window.loadModule = async function(path, el) {
-            // Подсветка активной кнопки
-            if (el) {
-                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-                el.classList.add('active');
-            }
+    // 1. Сохраняем год в память телефона
+    window.saveYear = function() {
+        const yearValue = document.getElementById('app-year').value;
+        localStorage.setItem('GL_Selected_Year', yearValue);
+    };
 
-            try {
-                // Загружаем JS файл как модуль
-                const module = await import(path + '?v=' + Date.now());
-                if (module.render) {
-                    module.render(); // Запускаем отрисовку страницы
-                }
-            } catch (err) {
-                console.error("Ошибка загрузки модуля:", err);
-                document.getElementById('app-viewport').innerHTML = `<h1>Упс!</h1><p>Файл ${path} не найден или содержит ошибку.</p>`;
-            }
+    // 2. Загружаем год из памяти
+    function loadYear() {
+        const savedYear = localStorage.getItem('GL_Selected_Year');
+        if (savedYear) {
+            document.getElementById('app-year').value = savedYear;
         }
+    }
 
-        // По умолчанию грузим цели
-        window.onload = () => loadModule('./goals.js');
-    </script>
+    // Функция загрузки модулей (твоя текущая)
+    window.loadModule = async function(path, el) {
+        if (el) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        try {
+            const module = await import(path + '?v=' + Date.now());
+            if (module.render) {
+                module.render(); 
+            }
+        } catch (err) {
+            console.error("Ошибка:", err);
+            document.getElementById('app-viewport').innerHTML = `<h1>Упс!</h1><p>Файл ${path} не найден.</p>`;
+        }
+    }
+
+    // Запуск при загрузке страницы
+    window.onload = () => {
+        loadYear(); // Сначала восстанавливаем год
+        loadModule('./goals.js'); // Потом рисуем цели
+    };
+</script>
 </body>
 </html>
