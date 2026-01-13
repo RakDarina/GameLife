@@ -1,5 +1,5 @@
 /* ==========================================
-   МОДУЛЬ: ВОДА (water.js) — STRICT VERSION
+   МОДУЛЬ: ВОДА (water.js) — STRICT LOGIC
    ========================================== */
 
 const WaterPage = {
@@ -51,10 +51,10 @@ const WaterPage = {
         return streak;
     },
 
-    // Метод ТОЛЬКО для ручного ввода в графиках
-    askManualAmount: function(dateStr, isAdding) {
+    // Функция только для графиков: спрашивает число
+    askSpecificAmount: function(dateStr, isAdding) {
         const title = isAdding ? "Сколько добавить мл?" : "Сколько убрать мл?";
-        const amount = prompt(title, "200");
+        const amount = prompt(title, "250");
         
         if (amount !== null && amount !== "") {
             const val = parseInt(amount);
@@ -66,16 +66,37 @@ const WaterPage = {
                 this.state.history[dateStr] = Math.max(0, (this.state.history[dateStr] || 0) + (val * multiplier));
             }
             this.saveData();
-            if (document.querySelector('.w-modal')) document.querySelector('.w-modal').remove();
+            this.closeModal();
             this.render();
         }
     },
 
-    // Метод для быстрых кнопок на ГЛАВНОЙ (без вопросов)
+    // Функция для главной: просто + / - без вопросов
     quickChange: function(ml) {
         this.state.current = Math.max(0, this.state.current + ml);
         this.saveData();
         this.render();
+    },
+
+    closeModal: function() {
+        const modal = document.querySelector('.w-modal');
+        if (modal) modal.remove();
+    },
+
+    showEditModal: function(dateStr) {
+        const val = (dateStr === this.state.lastDate) ? this.state.current : (this.state.history[dateStr] || 0);
+        const modal = document.createElement('div');
+        modal.className = 'w-modal';
+        modal.innerHTML = `
+            <div class="w-modal-content">
+                <h3 style="margin-bottom:5px;">${dateStr}</h3>
+                <p style="margin-bottom:20px; color:#8E8E93;">Выпито: ${val} мл</p>
+                <button class="w-modal-btn" style="background:#007AFF; color:#fff;" onclick="WaterPage.askSpecificAmount('${dateStr}', true)">Добавить стакан</button>
+                <button class="w-modal-btn" style="background:#FF3B30; color:#fff;" onclick="WaterPage.askSpecificAmount('${dateStr}', false)">Убрать стакан</button>
+                <button class="w-modal-btn" style="background:#E5E5EA; color:#000;" onclick="WaterPage.closeModal()">Отмена</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
     },
 
     render: function() {
@@ -115,7 +136,6 @@ const WaterPage = {
             </style>
         `;
 
-        // ГЛАВНЫЙ ЭКРАН - ВОЗВРАЩЕНО КАК БЫЛО
         if (this.state.view === 'main') {
             app.innerHTML = `${styles}
             <div class="w-container">
@@ -139,11 +159,9 @@ const WaterPage = {
                     <div class="w-btn-circle" style="background:#fff; color:#FF3B30; border:2px solid #FF3B30;" onclick="WaterPage.quickChange(-WaterPage.state.cupSize)">−</div>
                     <div class="w-btn-circle" style="background:#007AFF; color:#fff;" onclick="WaterPage.quickChange(WaterPage.state.cupSize)">+</div>
                 </div>
-                <p style="color:#AEAEB2; margin-top:20px;">Кнопки добавляют по ${this.state.cupSize} мл</p>
             </div>`;
         }
 
-        // ГРАФИКИ - С ФУНКЦИЕЙ РЕДАКТИРОВАНИЯ ЧЕРЕЗ ВВОД
         else if (this.state.view === 'stats') {
             app.innerHTML = `${styles}
             <div class="w-container">
@@ -162,7 +180,7 @@ const WaterPage = {
             <div class="w-container">
                 <div class="w-header"><span onclick="WaterPage.state.view='main'; WaterPage.render()" style="color:#007AFF">‹ Готово</span></div>
                 <div style="background:#fff; padding:20px; border-radius:20px;">
-                    <p style="font-weight:600;">Расчет по весу:</p>
+                    <p style="font-weight:600;">Рассчитать по весу:</p>
                     <div style="display:flex; gap:10px; margin-bottom:20px;">
                         <input type="number" id="set-weight" placeholder="Кг" style="flex:1; padding:12px; border-radius:10px; border:1px solid #E5E5EA;">
                         <button onclick="WaterPage.calcWeight()" style="padding:10px; background:#007AFF; color:#fff; border:none; border-radius:10px;">OK</button>
@@ -206,22 +224,6 @@ const WaterPage = {
             cells += `<div class="w-day-cell" onclick="WaterPage.showEditModal('${ds}')">${i}<div class="w-day-fill" style="height:${fillH}%"></div></div>`;
         }
         return `<div class="w-month-grid">${cells}</div>`;
-    },
-
-    showEditModal: function(dateStr) {
-        const val = (dateStr === this.state.lastDate) ? this.state.current : (this.state.history[dateStr] || 0);
-        const modal = document.createElement('div');
-        modal.className = 'w-modal';
-        modal.innerHTML = `
-            <div class="w-modal-content">
-                <h3 style="margin-bottom:5px;">${dateStr}</h3>
-                <p style="margin-bottom:20px; color:#8E8E93;">Сейчас: ${val} мл</p>
-                <button class="w-modal-btn" style="background:#007AFF; color:#fff;" onclick="WaterPage.askManualAmount('${dateStr}', true)">+ Добавить (ввести мл)</button>
-                <button class="w-modal-btn" style="background:#FF3B30; color:#fff;" onclick="WaterPage.askManualAmount('${dateStr}', false)">- Убрать (ввести мл)</button>
-                <button class="w-modal-btn" style="background:#E5E5EA; color:#000;" onclick="this.parentElement.parentElement.remove()">Отмена</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
     },
 
     calcWeight: function() {
