@@ -35,11 +35,21 @@
         </div>
 
     <nav class="tab-bar">
-        <div class="tab-item active" onclick="loadModule('./goals.js', this)"><span class="tab-icon">🎯</span>Цели</div>
-        <div class="tab-item" onclick="loadModule('./mental.js', this)"><span class="tab-icon">🧠</span>Менталка</div>
-        <div class="tab-item" onclick="loadModule('./lists.js', this)"><span class="tab-icon">📚</span>Списки</div>
-        <div class="tab-item" onclick="loadModule('./settings.js', this)"><span class="tab-icon">⚙️</span>Настройки</div>
-    </nav>
+    <div class="tab-item active" onclick="loadModule('./goals.js', this)">
+        <span class="tab-icon">🎯</span>Цели
+    </div>
+    
+    <div class="tab-item" onclick="loadModule('./health.js', this)">
+        <span class="tab-icon">💗</span>Здоровье
+    </div>
+
+    <div class="tab-item" onclick="loadModule('./lists.js', this)">
+        <span class="tab-icon">📚</span>Списки
+    </div>
+    <div class="tab-item" onclick="loadModule('./settings.js', this)">
+        <span class="tab-icon">⚙️</span>Настройки
+    </div>
+</nav>
 
     <script type="module">
     // 1. Сохраняем год в память телефона
