@@ -101,11 +101,25 @@
             }
 
             // В будущем здесь будет загрузка из разных файлов
-            content.innerHTML = `<h2>Загрузка страницы ${titles[pageName]}...</h2>`;
+            // Очищаем контент
+content.innerHTML = '';
+
+if (pageName === 'goals') {
+    // Если открыли Цели — запускаем наш модуль
+    if (typeof GoalsModule !== 'undefined') {
+        GoalsModule.init();
+    } else {
+        content.innerHTML = '<p>Ошибка: goals.js не загружен</p>';
+    }
+} else {
+    // Для остальных страниц пока просто заглушка
+    content.innerHTML = `<h2>Страница: ${titles[pageName]}</h2><p>Скоро здесь будет контент...</p>`;
+}
         }
 
         // Загружаем первую страницу при старте
         window.onload = () => loadPage('goals');
     </script>
+    <script src="goals.js"></script>
 </body>
 </html>
