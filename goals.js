@@ -305,7 +305,10 @@ const GoalsPage = {
     }
 };
 
-// Экспортируем функцию для index.html
+// В самом низу твоего файла goals.js замени старый экспорт на этот:
 export function render() {
     GoalsPage.init();
 }
+
+// Сделай GoalsPage глобальным, чтобы onclick в HTML (который генерирует скрипт) работал
+window.GoalsPage = GoalsPage;
