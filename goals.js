@@ -281,7 +281,7 @@ const GoalsPage = {
                     ${!isRoot ? `<div class="gl-back-btn" onclick="GoalsPage.goBack()">‹ Назад</div>` : ''}
                     
                     <div class="gl-big-title">
-                        ${isRoot ? 'Цели 2026' : currentTitle}
+                        ${isRoot ? 'Цели' : currentTitle}
                     </div>
 
                     <div class="gl-main-progress-bg">
