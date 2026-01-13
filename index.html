@@ -3,123 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <meta name="apple-mobile-web-app-title" content="LifeSpark">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="icon.png">
-
-    <title>LifeSpark</title>
-    
+    <title>GameLife</title>
     <style>
-        :root {
-            --main-blue: #007AFF;
-            --bg-color: #f2f2f7;
-        }
+        :root { --blue: #007AFF; --bg: #F2F2F7; --red: #FF3B30; --orange: #FF9500; --yellow: #FFCC00; --green: #34C759; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui; margin: 0; background: var(--bg); color: #000; padding-bottom: 160px; }
 
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0; 
-            background-color: var(--bg-color);
-            color: #000;
-            user-select: none;
-        }
+        /* HEADER */
+        .header { position: sticky; top: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(20px); padding: 50px 20px 15px; z-index: 100; }
+        .year-wrapper { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .year-input { font-size: 34px; font-weight: 800; border: none; background: transparent; width: 120px; outline: none; }
+        
+        /* ГЛОБАЛЬНЫЙ ПРОГРЕСС */
+        .main-progress-info { font-size: 13px; color: #8E8E93; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .progress-track { height: 8px; background: #E5E5EA; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; transition: 0.5s ease; width: 0%; }
 
-        /* Шапка */
-        .header {
-            position: sticky; top: 0; background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px); padding: 40px 20px 10px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
+        /* КАРТОЧКА ЦЕЛИ */
+        .card { background: #fff; border-radius: 20px; padding: 18px; margin: 15px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+        .card-title { font-size: 19px; font-weight: 700; flex: 1; white-space: pre-wrap; word-break: break-word; }
+        .card-percent { font-size: 14px; color: #8E8E93; font-weight: 600; }
+        
+        .item-actions { display: flex; gap: 15px; margin-top: 5px; }
+        .btn-icon { font-size: 18px; cursor: pointer; filter: grayscale(1); opacity: 0.5; }
 
-        /* Контейнер для контента страниц */
-        #app-content { padding: 20px; padding-bottom: 100px; }
+        /* КНОПКА НАЗАД */
+        .back-btn { color: var(--blue); font-size: 17px; cursor: pointer; display: none; align-items: center; margin: 10px 20px; font-weight: 500; }
 
-        /* Нижнее меню */
-        .nav-bar {
-            position: fixed; bottom: 0; width: 100%; height: 85px;
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around; padding-top: 10px;
-            border-top: 0.5px solid #ccc;
-        }
+        /* ПОЛЕ ВВОДА (ДЖИМИНИ СТАЙЛ) */
+        .input-area { position: fixed; bottom: 90px; width: 100%; padding: 10px 20px; background: rgba(255,255,255,0.9); backdrop-filter: blur(15px); border-top: 0.5px solid #C6C6C8; display: flex; align-items: flex-end; gap: 10px; }
+        .textarea { flex: 1; background: #fff; border: 1px solid #C6C6C8; border-radius: 20px; padding: 10px 15px; font-size: 16px; font-family: inherit; resize: none; max-height: 150px; outline: none; }
+        .send-btn { width: 35px; height: 35px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: bold; cursor: pointer; margin-bottom: 3px; }
 
-        .nav-item { text-align: center; color: #8e8e93; font-size: 11px; text-decoration: none; flex: 1; }
-        .nav-item.active { color: var(--main-blue); }
-        .nav-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+        /* ТАБ БАР */
+        .tab-bar { position: fixed; bottom: 0; width: 100%; height: 85px; background: #fff; border-top: 0.5px solid #C6C6C8; display: flex; justify-content: space-around; padding-top: 10px; }
+        .tab-item { text-align: center; color: #8E8E93; font-size: 10px; text-decoration: none; }
+        .tab-item.active { color: var(--blue); }
+        .tab-icon { font-size: 24px; display: block; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1 id="page-title">Цели</h1>
-        <div class="settings-icon" onclick="loadPage('settings')">⚙️</div>
+<div class="header" id="main-header">
+    <div class="year-wrapper">
+        <input type="number" id="app-year" class="year-input" value="2026">
+        <span>✏️</span>
     </div>
+    <div class="main-progress-info">
+        <span>Общий прогресс</span>
+        <span id="global-percent-text">0%</span>
+    </div>
+    <div class="progress-track">
+        <div id="global-progress-fill" class="progress-fill"></div>
+    </div>
+</div>
 
-    <div id="app-content">
-        </div>
+<div id="back-nav" class="back-btn" onclick="Goals.goBack()">‹ Назад</div>
 
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="loadPage('goals', this)">
-            <span class="nav-icon">🎯</span>Цели
-        </div>
-        <div class="nav-item" onclick="loadPage('health', this)">
-            <span class="nav-icon">💧</span>Здоровье
-        </div>
-        <div class="nav-item" onclick="loadPage('mental', this)">
-            <span class="nav-icon">🧠</span>Ментальное
-        </div>
-        <div class="nav-item" onclick="loadPage('lists', this)">
-            <span class="nav-icon">📚</span>Списки
-        </div>
-        <div class="nav-item" onclick="loadPage('game', this)">
-            <span class="nav-icon">👾</span>Игра
-        </div>
-    </nav>
+<div id="goals-list"></div>
 
-    <script>
-        // Функция для смены страниц
-        function loadPage(pageName, element) {
-            const content = document.getElementById('app-content');
-            const title = document.getElementById('page-title');
+<div class="input-area">
+    <textarea id="task-input" class="textarea" placeholder="Новая цель..." rows="1" oninput="autoResize(this)"></textarea>
+    <div class="send-btn" onclick="Goals.add()">↑</div>
+</div>
 
-            // Обновляем заголовок
-            const titles = {
-                'goals': 'Мои цели',
-                'health': 'Здоровье',
-                'mental': 'Ментальное',
-                'lists': 'Мои списки',
-                'game': 'Герой',
-                'settings': 'Настройки'
+<nav class="tab-bar">
+    <div class="tab-item active"><span class="tab-icon">🎯</span>Цели</div>
+    <div class="tab-item"><span class="tab-icon">🧠</span>Менталка</div>
+    <div class="tab-item"><span class="tab-icon">📚</span>Списки</div>
+    <div class="tab-item"><span class="tab-icon">📝</span>Дневник</div>
+    <div class="tab-item"><span class="tab-icon">⚙️</span>Настройки</div>
+</nav>
+
+<script>
+    // Автоматическая высота текстового поля
+    function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+    }
+
+    const Goals = {
+        path: [], // Путь вложенности
+        data: JSON.parse(localStorage.getItem('GL_Data')) || [],
+
+        save() {
+            localStorage.setItem('GL_Data', JSON.stringify(this.data));
+            this.render();
+        },
+
+        // Расчет прогресса (рекурсия)
+        calc(item) {
+            if (!item.children || item.children.length === 0) return item.done ? 100 : 0;
+            let sum = 0;
+            item.children.forEach(c => sum += this.calc(c));
+            return Math.round(sum / item.children.length);
+        },
+
+        getColor(p) {
+            if (p < 30) return 'var(--red)';
+            if (p < 60) return 'var(--orange)';
+            if (p < 90) return 'var(--yellow)';
+            return 'var(--green)';
+        },
+
+        getCurrentFolder() {
+            let current = this.data;
+            for (let id of this.path) {
+                let found = current.find(i => i.id === id);
+                if (found) current = found.children;
+            }
+            return current;
+        },
+
+        add() {
+            const input = document.getElementById('task-input');
+            if (!input.value.trim()) return;
+            
+            const newItem = {
+                id: Date.now(),
+                title: input.value,
+                done: false,
+                children: []
             };
-            title.innerText = titles[pageName];
 
-            // Меняем активную иконку
-            if(element) {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                element.classList.add('active');
+            this.getCurrentFolder().push(newItem);
+            input.value = '';
+            input.style.height = 'auto';
+            this.save();
+        },
+
+        toggle(id) {
+            const item = this.getCurrentFolder().find(i => i.id === id);
+            if (item) {
+                item.done = !item.done;
+                // Если пометили выполненным, можно автоматически помечать детей (по желанию)
+                this.save();
+            }
+        },
+
+        delete(id) {
+            if (confirm('Удалить навсегда?')) {
+                const f = this.getCurrentFolder();
+                const idx = f.findIndex(i => i.id === id);
+                f.splice(idx, 1);
+                this.save();
+            }
+        },
+
+        edit(id) {
+            const item = this.getCurrentFolder().find(i => i.id === id);
+            const newT = prompt('Изменить:', item.title);
+            if (newT) { item.title = newT; this.save(); }
+        },
+
+        open(id) {
+            this.path.push(id);
+            this.render();
+        },
+
+        goBack() {
+            this.path.pop();
+            this.render();
+        },
+
+        render() {
+            const listEl = document.getElementById('goals-list');
+            const items = this.getCurrentFolder();
+            const isRoot = this.path.length === 0;
+
+            // Навигация
+            document.getElementById('back-nav').style.display = isRoot ? 'none' : 'flex';
+            document.getElementById('main-header').style.display = isRoot ? 'block' : 'none';
+
+            // Общий прогресс (для текущего экрана)
+            let total = 0;
+            if (items.length > 0) {
+                let sum = 0;
+                items.forEach(i => sum += this.calc(i));
+                total = Math.round(sum / items.length);
             }
 
-            // В будущем здесь будет загрузка из разных файлов
-            // Очищаем контент
-content.innerHTML = '';
+            // Если мы на главном экране — обновляем шапку
+            if (isRoot) {
+                const fill = document.getElementById('global-progress-fill');
+                fill.style.width = total + '%';
+                fill.style.backgroundColor = this.getColor(total);
+                document.getElementById('global-percent-text').innerText = total + '%';
+            }
 
-if (pageName === 'goals') {
-    // Если открыли Цели — запускаем наш модуль
-    if (typeof GoalsModule !== 'undefined') {
-        GoalsModule.init();
-    } else {
-        content.innerHTML = '<p>Ошибка: goals.js не загружен</p>';
-    }
-} else {
-    // Для остальных страниц пока просто заглушка
-    content.innerHTML = `<h2>Страница: ${titles[pageName]}</h2><p>Скоро здесь будет контент...</p>`;
-}
+            listEl.innerHTML = items.map(item => {
+                const p = this.calc(item);
+                const c = this.getColor(p);
+                return `
+                    <div class="card">
+                        <div class="card-header">
+                            <input type="checkbox" ${item.done ? 'checked' : ''} onclick="event.stopPropagation(); Goals.toggle(${item.id})" style="transform: scale(1.3)">
+                            <div class="card-title" onclick="Goals.open(${item.id})" style="${item.done ? 'text-decoration:line-through; color:gray' : ''}">${item.title}</div>
+                            <div class="card-percent">${p}%</div>
+                        </div>
+                        <div class="progress-track" onclick="Goals.open(${item.id})" style="height: 4px; cursor:pointer">
+                            <div class="progress-fill" style="width: ${p}%; background: ${c}"></div>
+                        </div>
+                        <div class="item-actions">
+                            <span class="btn-icon" onclick="Goals.edit(${item.id})">✏️</span>
+                            <span class="btn-icon" onclick="Goals.delete(${item.id})">🗑️</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
+    };
 
-        // Загружаем первую страницу при старте
-        window.onload = () => loadPage('goals');
-    </script>
-    <script src="goals.js"></script>
+    // Запуск
+    window.onload = () => Goals.render();
+</script>
+
 </body>
 </html>
