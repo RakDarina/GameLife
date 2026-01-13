@@ -1,5 +1,5 @@
 /* ==========================================
-   МОДУЛЬ: ВОДА (water.js) — FINAL CUSTOM
+   МОДУЛЬ: ВОДА (water.js) — STRICT VERSION
    ========================================== */
 
 const WaterPage = {
@@ -51,6 +51,33 @@ const WaterPage = {
         return streak;
     },
 
+    // Метод ТОЛЬКО для ручного ввода в графиках
+    askManualAmount: function(dateStr, isAdding) {
+        const title = isAdding ? "Сколько добавить мл?" : "Сколько убрать мл?";
+        const amount = prompt(title, "200");
+        
+        if (amount !== null && amount !== "") {
+            const val = parseInt(amount);
+            const multiplier = isAdding ? 1 : -1;
+            
+            if (dateStr === this.state.lastDate) {
+                this.state.current = Math.max(0, this.state.current + (val * multiplier));
+            } else {
+                this.state.history[dateStr] = Math.max(0, (this.state.history[dateStr] || 0) + (val * multiplier));
+            }
+            this.saveData();
+            if (document.querySelector('.w-modal')) document.querySelector('.w-modal').remove();
+            this.render();
+        }
+    },
+
+    // Метод для быстрых кнопок на ГЛАВНОЙ (без вопросов)
+    quickChange: function(ml) {
+        this.state.current = Math.max(0, this.state.current + ml);
+        this.saveData();
+        this.render();
+    },
+
     render: function() {
         const app = document.getElementById('app-viewport');
         const percent = Math.min((this.state.current / this.state.goal) * 100, 100);
@@ -82,13 +109,13 @@ const WaterPage = {
                 .w-day-cell { aspect-ratio: 1; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; position: relative; overflow: hidden; border: 1px solid #F2F2F7; }
                 .w-day-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: #007AFF; opacity: 0.2; pointer-events: none; }
 
-                /* Модальное окно редактирования */
                 .w-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 2000; }
                 .w-modal-content { background: #fff; padding: 30px; border-radius: 25px; width: 80%; text-align: center; }
-                .w-modal-btn { width: 100%; padding: 15px; margin: 5px 0; border-radius: 12px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
+                .w-modal-btn { width: 100%; padding: 15px; margin: 8px 0; border-radius: 15px; border: none; font-weight: 700; font-size: 17px; cursor: pointer; }
             </style>
         `;
 
+        // ГЛАВНЫЙ ЭКРАН - ВОЗВРАЩЕНО КАК БЫЛО
         if (this.state.view === 'main') {
             app.innerHTML = `${styles}
             <div class="w-container">
@@ -102,32 +129,30 @@ const WaterPage = {
                 
                 <div style="font-size:18px; color:#8E8E93; margin-top:20px;">Сегодня выпито:</div>
                 <div style="font-size:48px; font-weight:900;">${this.state.current}<span style="font-size:20px; color:#AEAEB2;"> мл</span></div>
-                <div style="font-size:16px; color:#AEAEB2; margin-bottom:10px;">Цель: ${this.state.goal} мл</div>
 
-                <div class="w-glass-box" onclick="WaterPage.changeWater(WaterPage.state.cupSize)">
+                <div class="w-glass-box" onclick="WaterPage.quickChange(WaterPage.state.cupSize)">
                     <div class="w-glass-txt">${Math.round(percent)}%</div>
                     <div class="w-fill" style="height:${percent}%"></div>
                 </div>
 
                 <div class="w-controls">
-                    <div class="w-btn-circle" style="background:#fff; color:#FF3B30; border:2px solid #FF3B30;" onclick="WaterPage.changeWater(-WaterPage.state.cupSize)">−</div>
-                    <div class="w-btn-circle" style="background:#007AFF; color:#fff;" onclick="WaterPage.changeWater(WaterPage.state.cupSize)">+</div>
+                    <div class="w-btn-circle" style="background:#fff; color:#FF3B30; border:2px solid #FF3B30;" onclick="WaterPage.quickChange(-WaterPage.state.cupSize)">−</div>
+                    <div class="w-btn-circle" style="background:#007AFF; color:#fff;" onclick="WaterPage.quickChange(WaterPage.state.cupSize)">+</div>
                 </div>
+                <p style="color:#AEAEB2; margin-top:20px;">Кнопки добавляют по ${this.state.cupSize} мл</p>
             </div>`;
         }
 
+        // ГРАФИКИ - С ФУНКЦИЕЙ РЕДАКТИРОВАНИЯ ЧЕРЕЗ ВВОД
         else if (this.state.view === 'stats') {
             app.innerHTML = `${styles}
             <div class="w-container">
                 <div class="w-header"><span onclick="WaterPage.state.view='main'; WaterPage.render()" style="color:#007AFF">‹ Трекер</span></div>
-                
-                <div style="background:#FF9500; color:#fff; display:inline-block; padding:8px 20px; border-radius:20px; font-weight:700; margin-bottom:20px; width:100%; box-sizing:border-box; text-align:center;">🔥 Текущая серия: ${this.getStreak()} дн.</div>
-
+                <div style="background:#FF9500; color:#fff; display:inline-block; padding:10px; border-radius:15px; font-weight:700; margin-bottom:20px; width:100%; text-align:center;">🔥 Серия: ${this.getStreak()} дн.</div>
                 <div class="w-tabs">
                     <div class="w-tab ${this.state.statsTab === 'week' ? 'active' : ''}" onclick="WaterPage.state.statsTab='week'; WaterPage.render()">Неделя</div>
                     <div class="w-tab ${this.state.statsTab === 'month' ? 'active' : ''}" onclick="WaterPage.state.statsTab='month'; WaterPage.render()">Месяц</div>
                 </div>
-
                 ${this.state.statsTab === 'week' ? this.renderWeekChart() : this.renderMonthCalendar()}
             </div>`;
         }
@@ -136,22 +161,17 @@ const WaterPage = {
             app.innerHTML = `${styles}
             <div class="w-container">
                 <div class="w-header"><span onclick="WaterPage.state.view='main'; WaterPage.render()" style="color:#007AFF">‹ Готово</span></div>
-                <h2 style="font-weight:800; font-size:28px;">Настройки</h2>
-                
                 <div style="background:#fff; padding:20px; border-radius:20px;">
-                    <p style="margin:0 0 10px; font-weight:600;">Рассчитать по весу:</p>
-                    <div style="display:flex; gap:10px;">
-                        <input type="number" id="set-weight" placeholder="Ваш вес (кг)" style="flex:1; padding:12px; border-radius:10px; border:1px solid #E5E5EA;">
-                        <button onclick="WaterPage.calcWeight()" style="padding:10px; background:#007AFF; color:#fff; border:none; border-radius:10px;">ОК</button>
+                    <p style="font-weight:600;">Расчет по весу:</p>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <input type="number" id="set-weight" placeholder="Кг" style="flex:1; padding:12px; border-radius:10px; border:1px solid #E5E5EA;">
+                        <button onclick="WaterPage.calcWeight()" style="padding:10px; background:#007AFF; color:#fff; border:none; border-radius:10px;">OK</button>
                     </div>
-
-                    <p style="margin:20px 0 10px; font-weight:600;">Цель вручную (мл):</p>
-                    <input type="number" id="set-goal" style="width:100%; padding:12px; border-radius:10px; border:1px solid #E5E5EA;" value="${this.state.goal}">
-                    
-                    <p style="margin:20px 0 10px; font-weight:600;">Объем стакана (мл):</p>
+                    <p style="font-weight:600;">Цель (мл):</p>
+                    <input type="number" id="set-goal" style="width:100%; padding:12px; border-radius:10px; border:1px solid #E5E5EA; margin-bottom:20px;" value="${this.state.goal}">
+                    <p style="font-weight:600;">Размер стакана (мл):</p>
                     <input type="number" id="set-cup" style="width:100%; padding:12px; border-radius:10px; border:1px solid #E5E5EA;" value="${this.state.cupSize}">
-                    
-                    <button onclick="WaterPage.saveSettings()" style="width:100%; margin-top:30px; padding:15px; background:#34C759; color:#fff; border:none; border-radius:12px; font-weight:700;">Сохранить все</button>
+                    <button onclick="WaterPage.saveSettings()" style="width:100%; margin-top:30px; padding:15px; background:#34C759; color:#fff; border:none; border-radius:12px; font-weight:700;">Сохранить</button>
                 </div>
             </div>`;
         }
@@ -164,14 +184,13 @@ const WaterPage = {
             let ds = d.toLocaleDateString();
             let val = (ds === this.state.lastDate) ? this.state.current : (this.state.history[ds] || 0);
             let h = Math.min((val / this.state.goal) * 100, 100);
-            bars += `
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;" onclick="WaterPage.showEditModal('${ds}')">
-                    <div style="font-size:10px; font-weight:700;">${val}</div>
-                    <div style="width:22px; height:120px; background:#F2F2F7; border-radius:5px; position:relative; overflow:hidden;">
-                        <div style="position:absolute; bottom:0; width:100%; height:${h}%; background:#007AFF;"></div>
-                    </div>
-                    <div style="font-size:11px; color:#8E8E93;">${ds.slice(0,5)}</div>
-                </div>`;
+            bars += `<div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;" onclick="WaterPage.showEditModal('${ds}')">
+                <div style="font-size:10px; font-weight:700;">${val}</div>
+                <div style="width:22px; height:120px; background:#F2F2F7; border-radius:5px; position:relative; overflow:hidden;">
+                    <div style="position:absolute; bottom:0; width:100%; height:${h}%; background:#007AFF;"></div>
+                </div>
+                <div style="font-size:11px; color:#8E8E93;">${ds.slice(0,5)}</div>
+            </div>`;
         }
         return `<div style="display:flex; align-items:flex-end; background:#fff; padding:20px; border-radius:20px; height:200px;">${bars}</div>`;
     },
@@ -197,42 +216,25 @@ const WaterPage = {
             <div class="w-modal-content">
                 <h3 style="margin-bottom:5px;">${dateStr}</h3>
                 <p style="margin-bottom:20px; color:#8E8E93;">Сейчас: ${val} мл</p>
-                <button class="w-modal-btn" style="background:#007AFF; color:#fff;" onclick="WaterPage.modAnyDay('${dateStr}', ${this.state.cupSize})">Добавить стакан (+${this.state.cupSize})</button>
-                <button class="w-modal-btn" style="background:#FF3B30; color:#fff;" onclick="WaterPage.modAnyDay('${dateStr}', -${this.state.cupSize})">Убрать стакан (-${this.state.cupSize})</button>
+                <button class="w-modal-btn" style="background:#007AFF; color:#fff;" onclick="WaterPage.askManualAmount('${dateStr}', true)">+ Добавить (ввести мл)</button>
+                <button class="w-modal-btn" style="background:#FF3B30; color:#fff;" onclick="WaterPage.askManualAmount('${dateStr}', false)">- Убрать (ввести мл)</button>
                 <button class="w-modal-btn" style="background:#E5E5EA; color:#000;" onclick="this.parentElement.parentElement.remove()">Отмена</button>
             </div>
         `;
         document.body.appendChild(modal);
     },
 
-    modAnyDay: function(dateStr, ml) {
-        if (dateStr === this.state.lastDate) {
-            this.state.current = Math.max(0, this.state.current + ml);
-        } else {
-            this.state.history[dateStr] = Math.max(0, (this.state.history[dateStr] || 0) + ml);
-        }
-        this.saveData();
-        document.querySelector('.w-modal').remove();
-        this.render();
-    },
-
-    changeWater: function(ml) {
-        this.state.current = Math.max(0, this.state.current + ml);
-        this.saveData();
-        this.render();
-    },
-
     calcWeight: function() {
         const w = document.getElementById('set-weight').value;
         if(w) { 
             this.state.goal = w * 30; 
-            alert('Норма рассчитана: ' + this.state.goal + ' мл');
+            document.getElementById('set-goal').value = this.state.goal;
         }
     },
 
     saveSettings: function() {
-        this.state.cupSize = parseInt(document.getElementById('set-cup').value);
-        this.state.goal = parseInt(document.getElementById('set-goal').value);
+        this.state.cupSize = parseInt(document.getElementById('set-cup').value) || 250;
+        this.state.goal = parseInt(document.getElementById('set-goal').value) || 2000;
         this.saveData();
         this.state.view = 'main';
         this.render();
