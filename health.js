@@ -39,7 +39,7 @@ const HealthPage = {
                         <div class="hl-stat">Трекер</div>
                     </div>
 
-                    <div class="hl-card" style="background: #F3E5F5;" onclick="alert('Сон будет следующим!')">
+                    <div class="hl-card" style="background: #F3E5F5;" onclick="loadModule('./sleep.js')">
                         <div class="hl-icon">😴</div>
                         <div class="hl-title">Сон</div>
                         <div class="hl-stat">8ч 12м</div>
