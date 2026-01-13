@@ -1,5 +1,5 @@
 /* ==========================================
-   МОДУЛЬ: ВОДА (water.js) — STYLED LIKE WATERLLAMA
+   МОДУЛЬ: ВОДА (water.js) — FULL VERSION
    ========================================== */
 
 const WaterPage = {
@@ -8,8 +8,8 @@ const WaterPage = {
         current: 0,
         cupSize: 250,
         lastDate: new Date().toLocaleDateString(),
-        history: {}, // Формат: {'01.01.2026': 1500, '02.01.2026': 2100}
-        view: 'main' // 'main' или 'stats'
+        history: {}, 
+        view: 'main' // main, stats, settings
     },
 
     init: function() {
@@ -37,51 +37,16 @@ const WaterPage = {
         }
     },
 
-    addWater: function(ml) {
-        this.state.current = Math.max(0, this.state.current + ml);
-        this.saveData();
-        this.render();
-    },
-
-    // Расчет серии (Streak)
     getStreak: function() {
         let streak = 0;
-        let date = new Date();
+        let d = new Date();
         if (this.state.current >= this.state.goal) streak = 1;
-        
-        // Идем назад по истории
-        for (let i = 1; i < 365; i++) {
-            date.setDate(date.getDate() - 1);
-            let dStr = date.toLocaleDateString();
-            if (this.state.history[dStr] >= this.state.goal) streak++;
-            else break;
+        for (let i = 1; i < 30; i++) {
+            d.setDate(d.getDate() - 1);
+            let s = d.toLocaleDateString();
+            if (this.state.history[s] >= this.state.goal) streak++; else break;
         }
         return streak;
-    },
-
-    openSettings: function() {
-        const mode = confirm("ОК — Рассчитать по весу\nОтмена — Ввести цель вручную");
-        if (mode) {
-            const weight = prompt("Ваш вес в кг:", "60");
-            if (weight) this.state.goal = parseInt(weight) * 30;
-        } else {
-            const manual = prompt("Введите цель в мл:", this.state.goal);
-            if (manual) this.state.goal = parseInt(manual);
-        }
-        const cup = prompt("Объем одного стакана (мл):", this.state.cupSize);
-        if (cup) this.state.cupSize = parseInt(cup);
-        
-        this.saveData();
-        this.render();
-    },
-
-    editHistory: function(dateStr) {
-        const val = prompt(`Объем воды за ${dateStr} (мл):`, this.state.history[dateStr] || 0);
-        if (val !== null) {
-            this.state.history[dateStr] = parseInt(val);
-            this.saveData();
-            this.render();
-        }
     },
 
     render: function() {
@@ -90,96 +55,158 @@ const WaterPage = {
 
         const styles = `
             <style>
-                .w-wrap { text-align: center; font-family: -apple-system, sans-serif; animation: fadeIn 0.3s; }
-                .w-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 30px; }
+                .w-container { animation: fadeIn 0.3s; color: #1C1C1E; }
+                .w-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; }
                 
                 /* СТАКАН */
-                .w-glass-container {
-                    width: 160px; height: 220px; margin: 0 auto 40px;
-                    position: relative; background: #fff;
-                    clip-path: polygon(0% 0%, 100% 0%, 85% 100%, 15% 100%);
-                    border-bottom: 8px solid #E5E5EA;
+                .w-glass-box {
+                    width: 180px; height: 240px; margin: 20px auto; position: relative;
+                    background: #fff; clip-path: polygon(5% 0%, 95% 0%, 85% 100%, 15% 100%);
+                    border-bottom: 10px solid #E5E5EA; overflow: hidden; cursor: pointer;
                 }
-                .w-water {
-                    position: absolute; bottom: 0; left: 0; width: 100%;
+                .w-fill {
+                    position: absolute; bottom: 0; width: 100%; 
                     background: linear-gradient(180deg, #4FC3F7 0%, #007AFF 100%);
-                    transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
-                    z-index: 1;
+                    transition: height 1s ease-in-out;
                 }
-                .w-glass-percent {
-                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    font-size: 32px; font-weight: 800; z-index: 2; color: #1C1C1E;
-                    mix-blend-mode: multiply;
-                }
+                .w-glass-txt { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); font-size: 38px; font-weight: 900; z-index: 5; }
 
-                .w-streak-badge { background: #FF9500; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: 700; display: inline-block; margin-bottom: 20px; }
+                /* КНОПКИ */
+                .w-btn-circle { width: 70px; height: 70px; background: #007AFF; border-radius: 50%; color: #fff; font-size: 35px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 5px 15px rgba(0,122,255,0.3); }
+                .w-btn-row { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
                 
-                .w-btn-main { width: 80px; height: 80px; background: #007AFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 30px; margin: 0 auto; box-shadow: 0 8px 20px rgba(0,122,255,0.3); cursor: pointer; }
-                .w-btn-main:active { transform: scale(0.9); }
+                /* НАСТРОЙКИ И ГРАФИКИ */
+                .w-card { background: #fff; border-radius: 20px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+                .w-input { width: 100%; border: 1px solid #E5E5EA; padding: 12px; border-radius: 12px; font-size: 16px; margin-top: 8px; outline: none; }
+                .w-action-btn { background: #007AFF; color: #fff; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: 600; margin-top: 10px; }
+                
+                /* ГРАФИК СТОЛБИКИ */
+                .w-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; padding-top: 20px; }
+                .w-bar { width: 12%; background: #E5E5EA; border-radius: 4px; position: relative; }
+                .w-bar-fill { position: absolute; bottom: 0; width: 100%; background: #007AFF; border-radius: 4px; transition: height 0.5s; }
 
-                /* ИСТОРИЯ */
-                .w-hist-item { background: #fff; padding: 15px; border-radius: 15px; display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
-                
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
             </style>
         `;
 
+        // ГЛАВНЫЙ ЭКРАН
         if (this.state.view === 'main') {
-            app.innerHTML = `
-                ${styles}
-                <div class="w-wrap">
-                    <div class="w-header">
-                        <div onclick="loadModule('./health.js')" style="color:var(--blue); font-weight:500;">‹ Назад</div>
-                        <div style="display:flex; gap:20px;">
-                            <span onclick="WaterPage.state.view='stats'; WaterPage.render()">📊</span>
-                            <span onclick="WaterPage.openSettings()">⚙️</span>
-                        </div>
+            app.innerHTML = `${styles}
+            <div class="w-container">
+                <div class="w-header">
+                    <span onclick="loadModule('./health.js')">‹ Назад</span>
+                    <div style="gap:20px; display:flex;">
+                        <span onclick="WaterPage.state.view='stats'; WaterPage.render()">📊</span>
+                        <span onclick="WaterPage.state.view='settings'; WaterPage.render()">⚙️</span>
                     </div>
-
-                    <div class="w-streak-badge">🔥 Серия: ${this.getStreak()} дн.</div>
-                    
-                    <div style="font-size: 15px; color: #8E8E93;">Сегодня выпито</div>
-                    <div style="font-size: 38px; font-weight: 800; margin-bottom: 30px;">${this.state.current} <span style="font-size:20px; color:#8E8E93;">/ ${this.state.goal} мл</span></div>
-
-                    <div class="w-glass-container" onclick="WaterPage.addWater(WaterPage.state.cupSize)">
-                        <div class="w-glass-percent">${Math.round(percent)}%</div>
-                        <div class="w-water" style="height: ${percent}%"></div>
-                    </div>
-
-                    <div class="w-btn-main" onclick="WaterPage.addWater(WaterPage.state.cupSize)">+</div>
-                    <p style="color:#8E8E93; margin-top:15px;">Нажми на стакан или плюс, чтобы добавить ${this.state.cupSize}мл</p>
-                    <div onclick="WaterPage.addWater(-WaterPage.state.cupSize)" style="color:#FF3B30; font-size:14px; margin-top:10px;">Отменить последний ввод</div>
                 </div>
-            `;
-        } else {
-            // Вид графиков / Истории
-            const historyKeys = Object.keys(this.state.history).sort().reverse();
-            app.innerHTML = `
-                ${styles}
-                <div class="w-wrap">
-                    <div class="w-header">
-                        <div onclick="WaterPage.state.view='main'; WaterPage.render()" style="color:var(--blue); font-weight:500;">‹ Трекер</div>
-                        <div onclick="WaterPage.editHistory(new Date().toLocaleDateString())" style="color:var(--blue);">Добавить запись</div>
-                    </div>
-                    
-                    <h2 style="text-align:left; margin-bottom:20px;">История и График</h2>
-                    
-                    ${historyKeys.length === 0 ? '<p style="color:#8E8E93">История пока пуста</p>' : ''}
-                    
-                    ${historyKeys.map(date => `
-                        <div class="w-hist-item" onclick="WaterPage.editHistory('${date}')">
-                            <div>
-                                <div style="font-weight:600;">${date}</div>
-                                <div style="font-size:12px; color:${this.state.history[date] >= this.state.goal ? '#34C759' : '#8E8E93'}">
-                                    ${this.state.history[date] >= this.state.goal ? '● Норма выполнена' : '○ Недобор'}
-                                </div>
-                            </div>
-                            <div style="font-weight:700;">${this.state.history[date]} мл ✏️</div>
-                        </div>
-                    `).join('')}
+                
+                <div style="background:#FF9500; color:#fff; display:inline-block; padding:4px 12px; border-radius:15px; font-weight:700; margin-bottom:10px;">🔥 ${this.getStreak()} дн. серии</div>
+                <div style="font-size:40px; font-weight:900;">${this.state.current} <span style="font-size:18px; color:#8E8E93;">/ ${this.state.goal} мл</span></div>
+
+                <div class="w-glass-box" onclick="WaterPage.addWater(WaterPage.state.cupSize)">
+                    <div class="w-glass-txt">${Math.round(percent)}%</div>
+                    <div class="w-fill" style="height:${percent}%"></div>
                 </div>
-            `;
+
+                <div class="w-btn-circle" onclick="WaterPage.addWater(WaterPage.state.cupSize)">+</div>
+                
+                <div class="w-btn-row">
+                    <div onclick="WaterPage.addWater(-WaterPage.state.cupSize)" style="color:#FF3B30;">Отменить</div>
+                    <div onclick="WaterPage.addWater(1000)" style="color:#007AFF; font-weight:600;">+1 Литр</div>
+                </div>
+            </div>`;
         }
+
+        // ЭКРАН НАСТРОЕК (как ты просила)
+        else if (this.state.view === 'settings') {
+            app.innerHTML = `${styles}
+            <div class="w-container">
+                <div class="w-header"><span onclick="WaterPage.state.view='main'; WaterPage.render()">‹ Готово</span></div>
+                <h2 style="font-size:28px; font-weight:800;">Настройки воды</h2>
+                
+                <div class="w-card">
+                    <label style="font-weight:600;">Ваш вес (кг) для расчета:</label>
+                    <input type="number" id="set-weight" class="w-input" placeholder="Напр: 60">
+                    <button class="w-action-btn" onclick="WaterPage.calcByWeight()">Рассчитать норму (30мл/кг)</button>
+                </div>
+
+                <div class="w-card">
+                    <label style="font-weight:600;">Цель вручную (мл):</label>
+                    <input type="number" id="set-goal" class="w-input" value="${this.state.goal}">
+                    <label style="font-weight:600; display:block; margin-top:15px;">Объем стакана (мл):</label>
+                    <input type="number" id="set-cup" class="w-input" value="${this.state.cupSize}">
+                    <button class="w-action-btn" style="background:#34C759;" onclick="WaterPage.saveSettings()">Сохранить параметры</button>
+                </div>
+            </div>`;
+        }
+
+        // ЭКРАН ГРАФИКОВ И ИСТОРИИ
+        else if (this.state.view === 'stats') {
+            const historyKeys = Object.keys(this.state.history).sort().reverse().slice(0, 7);
+            app.innerHTML = `${styles}
+            <div class="w-container">
+                <div class="w-header"><span onclick="WaterPage.state.view='main'; WaterPage.render()">‹ Назад</span></div>
+                <h2 style="font-size:28px; font-weight:800;">Статистика</h2>
+                
+                <div class="w-card">
+                    <div style="font-weight:700; margin-bottom:10px;">Последние 7 дней</div>
+                    <div class="w-chart">
+                        ${[6,5,4,3,2,1,0].map(i => {
+                            const d = new Date(); d.setDate(d.getDate() - i);
+                            const val = (d.toLocaleDateString() === this.state.lastDate) ? this.state.current : (this.state.history[d.toLocaleDateString()] || 0);
+                            const h = Math.min((val / this.state.goal) * 100, 100);
+                            return `<div class="w-bar" style="height:100%"><div class="w-bar-fill" style="height:${h}%"></div></div>`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <h3 style="margin-top:25px;">История записей</h3>
+                <button class="w-action-btn" style="margin-bottom:15px; background:#5856D6;" onclick="WaterPage.manualAdd()">Добавить за другой день</button>
+
+                ${historyKeys.map(date => `
+                    <div class="w-card" style="display:flex; justify-content:space-between; padding:15px;" onclick="WaterPage.editDate('${date}')">
+                        <span>${date}</span>
+                        <span style="font-weight:700;">${this.state.history[date]} мл ✎</span>
+                    </div>
+                `).join('')}
+            </div>`;
+        }
+    },
+
+    // Логика функций
+    calcByWeight: function() {
+        const w = document.getElementById('set-weight').value;
+        if(w) { 
+            this.state.goal = w * 30; 
+            this.saveData(); 
+            alert('Норма установлена: ' + this.state.goal + 'мл'); 
+        }
+    },
+
+    saveSettings: function() {
+        this.state.goal = parseInt(document.getElementById('set-goal').value);
+        this.state.cupSize = parseInt(document.getElementById('set-cup').value);
+        this.saveData();
+        this.state.view = 'main';
+        this.render();
+    },
+
+    manualAdd: function() {
+        const d = prompt("Введите дату (ДД.ММ.ГГГГ):", new Date().toLocaleDateString());
+        const v = prompt("Сколько мл было выпито?", "1500");
+        if(d && v) { this.state.history[d] = parseInt(v); this.saveData(); this.render(); }
+    },
+
+    editDate: function(d) {
+        const v = prompt("Изменить количество мл для " + d, this.state.history[d]);
+        if(v !== null) { this.state.history[d] = parseInt(v); this.saveData(); this.render(); }
+    },
+
+    addWater: function(ml) {
+        this.state.current = Math.max(0, this.state.current + ml);
+        this.saveData();
+        this.render();
     }
 };
 
