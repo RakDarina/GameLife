@@ -56,7 +56,25 @@ const SleepPage = {
                 
                 .sl-card { background: #fff; border-radius: 20px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
                 .sl-label { font-size: 13px; color: #8E8E93; margin-bottom: 6px; display: block; }
-                .sl-input { width: 100%; padding: 12px; border: 1px solid #E5E5EA; border-radius: 12px; font-size: 16px; margin-bottom: 12px; box-sizing: border-box; }
+                .sl-input { 
+    width: 100%; 
+    padding: 12px; 
+    border: 1.5px solid #E5E5EA; /* Делаем рамку видимой */
+    border-radius: 12px; 
+    font-size: 16px; 
+    margin-bottom: 12px; 
+    box-sizing: border-box; 
+    background-color: #FAFAFA; /* Чуть выделяем фон внутри */
+    color: #1C1C1E;
+    -webkit-appearance: none; /* Убираем стандартные тени iOS */
+}
+
+/* Чтобы при нажатии рамка становилась ярче */
+.sl-input:focus {
+    outline: none;
+    border-color: #5856D6; 
+    background-color: #fff;
+}
                 
                 .sl-btn-main { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; }
                 .sl-btn-primary { background: #5856D6; color: #fff; }
