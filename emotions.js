@@ -58,66 +58,63 @@ const EmotionDiary = {
     render: function() {
         const app = document.getElementById('app-viewport');
         
-        /* Обновленные стили в emotions.js */
-const styles = `
-    <style>
-        .em-container { 
-            animation: fadeIn 0.3s; 
-            padding: 0 20px 120px; /* Фиксированные отступы слева и справа */
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .em-header { 
-            display: flex; 
-            align-items: center; 
-            padding: 20px 0; 
-            margin-bottom: 10px;
-        }
+        const styles = `
+            <style>
+                .em-container { animation: fadeIn 0.3s; padding-bottom: 100px; }
+                .em-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+                .em-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
+                .em-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; }
 
-        /* Карточка: теперь она всегда занимает 100% ширины контейнера */
-        .em-card { 
-            background: white; 
-            border-radius: 25px; 
-            padding: 20px; 
-            margin: 0 0 20px 0; /* Обнулили боковые margin */
-            width: 100%; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-            box-sizing: border-box; /* Важно, чтобы padding не расширял карту */
-            position: relative;
-        }
+                /* Карточка записи */
+                .em-card { 
+                    background: white; border-radius: 25px; padding: 20px; 
+                    margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+                    position: relative;
+                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ: чтобы рамка не вылазила */
+                }
+                .em-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+                .em-card-date { color: #5856D6; font-weight: 700; font-size: 17px; }
+                .em-card-actions { display: flex; gap: 15px; color: #8E8E93; }
+                
+                .em-field-label { font-weight: 800; display: block; margin-top: 10px; font-size: 15px; }
+                .em-field-text { font-size: 15px; margin-bottom: 10px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; }
+                .em-alt-text { color: #34C759; }
 
-        /* Пунктирный блок добавления тоже закрепляем */
-        .em-add-placeholder {
-            border: 2px dashed #C7C7CC; 
-            border-radius: 25px; 
-            padding: 30px;
-            width: 100%;
-            box-sizing: border-box;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 10px;
-            color: #8E8E93; 
-            cursor: pointer;
-        }
+                /* Кнопка Добавить (пунктир) */
+                .em-add-placeholder {
+                    border: 2px dashed #C7C7CC; border-radius: 25px; padding: 30px;
+                    display: flex; flex-direction: column; align-items: center; gap: 10px;
+                    color: #8E8E93; cursor: pointer; transition: 0.2s;
+                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ: чтобы рамка не вылазила */
+                }
+                .em-add-placeholder:active { background: #E5E5EA; }
 
-        .em-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .em-field-label { font-weight: 800; display: block; margin-top: 10px; font-size: 15px; }
-        .em-field-text { font-size: 15px; margin-bottom: 10px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; }
-        
-        /* Модальное окно записи */
-        .em-modal-content {
-            background: white; 
-            width: 100%; 
-            max-height: 90vh; 
-            border-radius: 30px 30px 0 0; 
-            padding: 25px 20px; /* Отступы внутри модалки */
-            box-sizing: border-box;
-            overflow-y: auto;
-        }
-    </style>
-`;
+                /* Модальное окно */
+                .em-modal {
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: flex-end;
+                }
+                .em-modal-content {
+                    background: white; width: 100%; max-height: 90vh; 
+                    border-radius: 30px 30px 0 0; padding: 25px; overflow-y: auto;
+                    animation: slideUp 0.3s ease-out;
+                    box-sizing: border-box;
+                }
+                .em-form-group { margin-bottom: 20px; }
+                .em-form-label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
+                .em-input, .em-textarea {
+                    width: 100%; border: 1px solid #E5E5EA; border-radius: 12px;
+                    padding: 12px; font-size: 16px; font-family: inherit; outline: none;
+                    box-sizing: border-box;
+                }
+                .em-textarea { min-height: 80px; resize: none; }
+                .em-modal-btns { display: flex; gap: 15px; margin-top: 20px; }
+                .em-btn-save { background: #5856D6; color: white; border: none; flex: 2; padding: 15px; border-radius: 15px; font-weight: 600; }
+                .em-btn-cancel { background: #F2F2F7; color: #007AFF; border: none; flex: 1; padding: 15px; border-radius: 15px; font-weight: 600; }
+
+                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+            </style>
+        `;
 
         let recordsHTML = this.records.map(r => `
             <div class="em-card">
