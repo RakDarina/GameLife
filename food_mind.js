@@ -3,11 +3,10 @@
    ========================================== */
 
 const FoodTracker = {
-    // Уникальный ключ в localStorage
     data: JSON.parse(localStorage.getItem('GL_Food_Data_v1')) || [],
     editingId: null,
-    selectedHistoryDate: new Date().toISOString().split('T')[0], // Дата для просмотра истории
-    viewMode: 'today', // 'today' или 'history'
+    selectedHistoryDate: new Date().toISOString().split('T')[0],
+    viewMode: 'today',
 
     init: function() {
         this.render();
@@ -32,13 +31,18 @@ const FoodTracker = {
 
     submitForm: function() {
         const form = document.getElementById('fd-form');
+        
+        // Получаем значения из активных кнопок-цифр
+        const hungerVal = document.querySelector('.fd-number.active[data-type="hunger"]')?.dataset.value || 5;
+        const fullnessVal = document.querySelector('.fd-number.active[data-type="fullness"]')?.dataset.value || 5;
+
         const record = {
             id: this.editingId === 'new' ? Date.now() : this.editingId,
             date: form.fd_date.value,
             time: form.fd_time.value,
             product: form.fd_prod.value,
-            hunger: form.fd_hunger.value,
-            fullness: form.fd_fullness.value,
+            hunger: hungerVal,
+            fullness: fullnessVal,
             activity: form.fd_act.value,
             thoughts: form.fd_emo.value
         };
@@ -46,7 +50,7 @@ const FoodTracker = {
         if (this.editingId === 'new') {
             this.data.unshift(record);
         } else {
-            const idx = this.data.findIndex(r => r.id === this.editingId);
+            const idx = this.data.findIndex(r => r.id == this.editingId);
             this.data[idx] = record;
         }
 
@@ -54,11 +58,17 @@ const FoodTracker = {
         this.save();
     },
 
+    selectNumber: function(el, type) {
+        // Убираем активность у всех кнопок в этой группе
+        document.querySelectorAll(`.fd-number[data-type="${type}"]`).forEach(btn => btn.classList.remove('active'));
+        // Добавляем нажатой
+        el.classList.add('active');
+    },
+
     render: function() {
         const app = document.getElementById('app-viewport');
         const todayStr = new Date().toISOString().split('T')[0];
         
-        // Фильтруем записи
         const displayDate = this.viewMode === 'today' ? todayStr : this.selectedHistoryDate;
         const filteredRecords = this.data
             .filter(r => r.date === displayDate)
@@ -66,7 +76,6 @@ const FoodTracker = {
 
         const styles = `
             <style>
-                /* Контейнер с защитой от шатания */
                 .fd-container { 
                     animation: fadeIn 0.3s; 
                     margin-left: -20px; margin-right: -20px;
@@ -81,54 +90,62 @@ const FoodTracker = {
                 .fd-title { font-size: 22px; font-weight: 800; }
                 .fd-history-btn { color: #5856D6; font-weight: 700; cursor: pointer; font-size: 14px; }
 
-                /* Календарь в истории */
                 .fd-history-nav { background: white; border-radius: 20px; padding: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
                 .fd-date-picker { border: none; font-family: inherit; font-size: 16px; font-weight: 700; color: #1C1C1E; flex: 1; outline: none; }
 
-                /* Карточка еды */
                 .fd-card { 
                     background: white; border-radius: 25px; padding: 20px; 
                     margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
                     box-sizing: border-box; width: 100%;
                 }
                 .fd-card-meta { display: flex; justify-content: space-between; color: #8E8E93; font-size: 13px; margin-bottom: 10px; }
-                .fd-card-prod { font-size: 18px; font-weight: 700; color: #1C1C1E; margin-bottom: 12px; line-height: 1.3; }
+                .fd-card-prod { font-size: 18px; font-weight: 700; color: #1C1C1E; margin-bottom: 12px; }
                 
-                .fd-badge-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+                .fd-badge-row { display: flex; gap: 8px; margin-bottom: 12px; }
                 .fd-badge { background: #F2F2F7; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #5856D6; }
 
                 .fd-info-label { font-size: 12px; color: #8E8E93; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
                 .fd-info-val { font-size: 15px; color: #3A3A3C; margin-bottom: 8px; white-space: pre-wrap; }
 
-                /* Форма (Модалка) */
+                /* МОДАЛКА */
                 .fd-modal {
                     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                     background: rgba(0,0,0,0.5); z-index: 3000;
-                    display: flex; align-items: flex-end; touch-action: none;
+                    display: flex; align-items: flex-end;
                 }
                 .fd-modal-content {
                     background: #F8F9FB; width: 100%; max-height: 95vh;
                     border-radius: 30px 30px 0 0; padding: 25px 20px;
                     box-sizing: border-box; overflow-y: auto;
-                    animation: fdSlide 0.3s ease-out; touch-action: pan-y;
+                    animation: fdSlide 0.3s ease-out;
                 }
 
                 .fd-group { background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
-                .fd-label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #5856D6; }
+                .fd-label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #5856D6; }
                 
-                /* Поля с автовысотой (textarea) */
-                .fd-input { width: 100%; border: none; background: transparent; font-size: 16px; outline: none; font-family: inherit; padding: 0; color: #1C1C1E; resize: none; }
-                
-                .fd-range { width: 100%; margin: 10px 0; accent-color: #5856D6; }
-                .fd-range-desc { display: flex; justify-content: space-between; font-size: 11px; color: #8E8E93; }
+                /* СЕТКА ЦИФР */
+                .fd-numbers-grid { 
+                    display: grid; 
+                    grid-template-columns: repeat(6, 1fr); 
+                    gap: 6px; 
+                    margin-bottom: 5px;
+                }
+                .fd-number {
+                    background: #F2F2F7; border-radius: 10px; padding: 10px 0;
+                    text-align: center; font-weight: 700; color: #1C1C1E;
+                    cursor: pointer; transition: 0.2s;
+                }
+                .fd-number.active { background: #5856D6; color: white; }
 
+                .fd-input { width: 100%; border: none; background: transparent; font-size: 16px; outline: none; font-family: inherit; padding: 0; color: #1C1C1E; resize: none; }
                 .fd-btn-save { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 20px; font-weight: 700; font-size: 16px; margin-top: 10px; }
 
                 @keyframes fdSlide { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
 
-        let recordsHTML = filteredRecords.length > 0 ? filteredRecords.map(r => `
+        let recordsHTML = filteredRecords.map(r => `
             <div class="fd-card">
                 <div class="fd-card-meta">
                     <span>${r.time}</span>
@@ -143,13 +160,23 @@ const FoodTracker = {
                     <div class="fd-badge">Сытость: ${r.fullness}/10</div>
                 </div>
                 ${r.activity ? `<div class="fd-info-label">В процессе:</div><div class="fd-info-val">${r.activity}</div>` : ''}
-                ${r.thoughts ? `<div class="fd-info-label">Мысли и эмоции:</div><div class="fd-info-val">${r.thoughts}</div>` : ''}
+                ${r.thoughts ? `<div class="fd-info-label">Мысли:</div><div class="fd-info-val">${r.thoughts}</div>` : ''}
             </div>
-        `).join('') : `<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет</div>`;
+        `).join('');
 
-        // Форма добавления/редактирования
         const currentEdit = this.editingId && this.editingId !== 'new' ? this.data.find(r => r.id == this.editingId) : null;
         
+        // Генерация кнопок с цифрами
+        const getNumbers = (type, currentVal) => {
+            let html = '<div class="fd-numbers-grid">';
+            for(let i=0; i<=10; i++) {
+                const active = i == (currentVal || 5) ? 'active' : '';
+                html += `<div class="fd-number ${active}" data-type="${type}" data-value="${i}" onclick="FoodTracker.selectNumber(this, '${type}')">${i}</div>`;
+            }
+            html += '</div>';
+            return html;
+        };
+
         const modalHTML = this.editingId ? `
             <div class="fd-modal" onclick="FoodTracker.editingId=null; FoodTracker.render()">
                 <div class="fd-modal-content" onclick="event.stopPropagation()">
@@ -168,24 +195,22 @@ const FoodTracker = {
                         </div>
 
                         <div class="fd-group">
-                            <label class="fd-label">Насколько были голодны? (0-10)</label>
-                            <input type="range" name="fd_hunger" class="fd-range" min="0" max="10" value="${currentEdit ? currentEdit.hunger : 5}">
-                            <div class="fd-range-desc"><span>Совсем нет</span><span>Очень голодна</span></div>
+                            <label class="fd-label">Голод до еды (0-10)</label>
+                            ${getNumbers('hunger', currentEdit?.hunger)}
                         </div>
 
                         <div class="fd-group">
-                            <label class="fd-label">Насколько сыты после? (0-10)</label>
-                            <input type="range" name="fd_fullness" class="fd-range" min="0" max="10" value="${currentEdit ? currentEdit.fullness : 5}">
-                            <div class="fd-range-desc"><span>Голодна</span><span>Объелась</span></div>
+                            <label class="fd-label">Сытость после (0-10)</label>
+                            ${getNumbers('fullness', currentEdit?.fullness)}
                         </div>
 
                         <div class="fd-group">
-                            <label class="fd-label">Что делали во время еды?</label>
+                            <label class="f-label" style="font-weight:700; font-size:14px; color:#5856D6; display:block; margin-bottom:8px;">Что делали во время еды?</label>
                             <textarea name="fd_act" class="fd-input" rows="2" placeholder="Смотрела ТВ, работала...">${currentEdit ? currentEdit.activity : ''}</textarea>
                         </div>
 
                         <div class="fd-group">
-                            <label class="fd-label">Мысли и эмоции</label>
+                            <label class="f-label" style="font-weight:700; font-size:14px; color:#5856D6; display:block; margin-bottom:8px;">Мысли и эмоции</label>
                             <textarea name="fd_emo" class="fd-input" rows="3" placeholder="О чем думали?">${currentEdit ? currentEdit.thoughts : ''}</textarea>
                         </div>
 
@@ -214,7 +239,7 @@ const FoodTracker = {
                     </div>
                 ` : ''}
 
-                ${recordsHTML}
+                ${recordsHTML || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет</div>'}
 
                 <div style="position:fixed; bottom:110px; left:20px; right:20px;">
                     <button style="width:100%; background:#5856D6; color:white; border:none; padding:18px; border-radius:20px; font-weight:700; box-shadow: 0 10px 25px rgba(88, 86, 214, 0.3);" 
@@ -226,8 +251,10 @@ const FoodTracker = {
             ${modalHTML}
         `;
 
-        // Авто-увеличение высоты текстовых полей при вводе
-        document.querySelectorAll('.fd-input').forEach(el => {
+        // Авто-высота для всех textarea
+        document.querySelectorAll('textarea.fd-input').forEach(el => {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
             el.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
