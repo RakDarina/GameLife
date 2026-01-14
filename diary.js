@@ -26,11 +26,11 @@ const DiaryModule = {
         this.render();
     },
 
-    // --- Методы ---
     openMoodModal: function(date = new Date().toISOString().split('T')[0]) {
         this.editingMoodDate = date;
         this.render();
     },
+
     saveMood: function() {
         const selected = document.querySelector('.dr-mood-opt.active')?.dataset.type;
         const note = document.getElementById('dr-mood-note-field')?.value || '';
@@ -41,17 +41,20 @@ const DiaryModule = {
             this.save();
         }
     },
+
     deleteMood: function(date) {
-        if (confirm('Удалить настроение за этот день?')) {
+        if (confirm('Удалить настроение?')) {
             delete this.moodData[date];
             this.editingMoodDate = null;
             this.save();
         }
     },
+
     openNoteModal: function(id = null) {
         this.editingNoteId = id;
         this.render();
     },
+
     saveNote: function() {
         const date = document.getElementById('dr-note-date-field').value;
         const text = document.getElementById('dr-note-text-field').value;
@@ -66,6 +69,13 @@ const DiaryModule = {
         this.save();
     },
 
+    deleteNote: function(id) {
+        if (confirm('Удалить запись?')) {
+            this.notesData = this.notesData.filter(n => n.id != id);
+            this.save();
+        }
+    },
+
     render: function() {
         const app = document.getElementById('app-viewport');
         const today = new Date().toISOString().split('T')[0];
@@ -73,55 +83,45 @@ const DiaryModule = {
 
         const styles = `
             <style>
-                .dr-wrap { animation: fadeIn 0.3s; padding: 20px; padding-bottom: 120px; font-family: -apple-system, sans-serif; background: #F9F9F9; min-height: 100vh; }
-                .dr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-                .dr-title { font-size: 34px; font-weight: 800; margin: 0; }
+                .dr-wrap { animation: fadeIn 0.3s; padding-top: 10px; }
+                .dr-card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+                .dr-card-title { font-weight: 800; font-size: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
                 
-                .dr-card { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-                .dr-card-title { font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-                
-                .dr-mood-btn { border: 2px dashed #E5E5EA; border-radius: 20px; padding: 25px; text-align: center; color: #8E8E93; cursor: pointer; }
-                .dr-mood-display { text-align: center; padding: 10px 0; }
-                .dr-mood-display .material-icons { font-size: 60px; margin-bottom: 8px; }
-                
-                .dr-nav-row { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 15px; }
-                .dr-month-nav { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; }
-                .dr-nav-btn { color: #007AFF; cursor: pointer; font-size: 24px; user-select: none; }
+                .dr-mood-btn { border: 2px dashed #E5E5EA; border-radius: 20px; padding: 30px; text-align: center; color: #8E8E93; cursor: pointer; }
+                .dr-mood-active { text-align: center; padding: 10px 0; }
+                .dr-mood-active .material-icons { font-size: 64px; display: block; margin: 0 auto 10px; }
 
-                .dr-note-card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; }
-                .dr-note-date { font-size: 13px; color: #8E8E93; font-weight: 600; margin-bottom: 6px; }
-                .dr-note-excerpt { font-size: 16px; line-height: 1.4; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+                .dr-nav-row { display: flex; justify-content: space-between; align-items: center; margin: 30px 0 15px; padding: 0 5px; }
+                .dr-month-display { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; }
+
+                .dr-note-item { background: white; border-radius: 22px; padding: 18px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+                .dr-note-date { font-size: 12px; color: #8E8E93; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+                .dr-note-text { font-size: 16px; line-height: 1.5; white-space: pre-wrap; }
 
                 /* Модалки */
-                .dr-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9999; display: flex; align-items: flex-end; }
-                .dr-modal { background: white; width: 100%; border-radius: 30px 30px 0 0; padding: 25px; max-height: 92vh; overflow-y: auto; }
-                .dr-modal-h { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 25px; }
+                .dr-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: flex-end; }
+                .dr-modal-content { background: #F2F2F7; width: 100%; border-radius: 30px 30px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
                 
-                .dr-form-item { background: #F2F2F7; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; }
-                .dr-form-label { font-size: 11px; color: #8E8E93; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
-                .dr-form-input { width: 100%; border: none; background: transparent; font-size: 17px; outline: none; padding: 0; font-family: inherit; }
+                .dr-input-block { background: white; border-radius: 18px; padding: 15px; margin-bottom: 15px; }
+                .dr-label { font-size: 11px; color: #8E8E93; font-weight: 800; margin-bottom: 6px; display: block; }
+                .dr-input { width: 100%; border: none; background: transparent; font-size: 17px; outline: none; font-family: inherit; resize: none; }
                 
-                .dr-mood-selector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 20px 0; }
-                .dr-mood-opt { text-align: center; opacity: 0.3; transition: 0.2s; cursor: pointer; }
+                .dr-mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+                .dr-mood-opt { text-align: center; opacity: 0.3; transition: 0.2s; }
                 .dr-mood-opt.active { opacity: 1; transform: scale(1.1); }
-                .dr-mood-opt .material-icons { font-size: 36px; display: block; margin-bottom: 4px; }
-                .dr-mood-opt span { font-size: 10px; font-weight: 700; }
+                .dr-mood-opt .material-icons { font-size: 36px; display: block; }
 
-                .dr-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
-                .dr-btn { padding: 16px; border-radius: 16px; border: none; font-weight: 700; font-size: 17px; cursor: pointer; }
-                .dr-btn-save { background: #007AFF; color: white; }
-                .dr-btn-cancel { background: #E5E5EA; color: #1C1C1E; }
-                .dr-btn-delete { background: #FFEBEB; color: #FF3B30; grid-column: span 2; margin-top: -5px; }
+                .dr-save-btn { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 17px; margin-top: 10px; }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
 
         if (this.currentView === 'stats') {
-            app.innerHTML = styles + this.renderStats(months);
+            app.innerHTML = styles + this.renderStats();
         } else {
             app.innerHTML = styles + this.renderMain(today, months);
         }
-        
-        this.attachAutoResize();
+        this.initTextAreas();
     },
 
     renderMain: function(today, months) {
@@ -133,132 +133,104 @@ const DiaryModule = {
 
         return `
             <div class="dr-wrap">
-                <div class="dr-header">
-                    <h1 class="dr-title">Дневник</h1>
-                    <span class="material-icons" style="color:#8E8E93; font-size:28px;">settings</span>
-                </div>
-
                 <div class="dr-card">
                     <div class="dr-card-title">
-                        <span>Мое настроение</span>
-                        <div style="color:#007AFF; cursor:pointer; font-size:15px; display:flex; align-items:center;" onclick="DiaryModule.currentView='stats'; DiaryModule.render()">
-                            <span class="material-icons" style="font-size:18px; margin-right:4px;">leaderboard</span> График
-                        </div>
+                        <span>Настроение сегодня</span>
+                        <div style="color:#5856D6; font-size:14px;" onclick="DiaryModule.currentView='stats'; DiaryModule.render()">График</div>
                     </div>
-
                     ${mood ? `
-                        <div class="dr-mood-display">
+                        <div class="dr-mood-active" onclick="DiaryModule.openMoodModal('${today}')">
                             <span class="material-icons" style="color:${this.moodConfig[mood.type].color}">${this.moodConfig[mood.type].icon}</span>
-                            <div style="font-weight:800; font-size:22px; color:${this.moodConfig[mood.type].color}">${this.moodConfig[mood.type].label}</div>
-                            <div style="margin-top:12px; color:#007AFF; font-weight:700; font-size:14px; cursor:pointer" onclick="DiaryModule.openMoodModal('${today}')">Изменить</div>
+                            <div style="font-weight:800; font-size:20px;">${this.moodConfig[mood.type].label}</div>
+                            ${mood.note ? `<div style="color:#8E8E93; margin-top:5px;">${mood.note}</div>` : ''}
                         </div>
                     ` : `
                         <div class="dr-mood-btn" onclick="DiaryModule.openMoodModal()">
-                            <span class="material-icons-outlined" style="font-size:32px; display:block; margin-bottom:8px;">add_reaction</span>
-                            Отметить настроение
+                            <span class="material-icons-outlined" style="font-size:30px;">add_reaction</span>
+                            <div style="font-size:14px; margin-top:8px; font-weight:600;">Отметить настроение</div>
                         </div>
                     `}
                 </div>
 
                 <div class="dr-nav-row">
-                    <h2 style="margin:0; font-size:22px; font-weight:800;">Записи</h2>
-                    <div class="dr-month-nav">
-                        <span class="material-icons dr-nav-btn" onclick="DiaryModule.changeMonth(-1)">chevron_left</span>
-                        <span style="min-width:110px; text-align:center;">${months[this.viewMonth]} ${this.viewYear}</span>
-                        <span class="material-icons dr-nav-btn" onclick="DiaryModule.changeMonth(1)">chevron_right</span>
+                    <span style="font-weight:900; font-size:22px;">Дневник</span>
+                    <div class="dr-month-display">
+                        <span class="material-icons-outlined" onclick="DiaryModule.changeMonth(-1)">chevron_left</span>
+                        <span style="min-width:110px; text-align:center;">${months[this.viewMonth]}</span>
+                        <span class="material-icons-outlined" onclick="DiaryModule.changeMonth(1)">chevron_right</span>
                     </div>
                 </div>
 
-                <div class="dr-mood-btn" style="padding:15px; margin-bottom:20px; border-style:solid; border-width:1px; background:white;" onclick="DiaryModule.openNoteModal('new')">
-                    <span class="material-icons" style="vertical-align:middle; font-size:20px; margin-right:5px;">edit</span> Новая запись
+                <div class="dr-note-item" style="text-align:center; border: 1px solid #E5E5EA; background: transparent; box-shadow: none;" onclick="DiaryModule.openNoteModal('new')">
+                    <span style="font-weight:700; color:#5856D6;">+ Новая запись</span>
                 </div>
 
-                <div class="dr-list">
-                    ${filteredNotes.map(n => `
-                        <div class="dr-note-card" onclick="DiaryModule.openNoteModal(${n.id})">
-                            <div class="dr-note-date">${new Date(n.date).toLocaleDateString('ru-RU', {day:'numeric', month:'long'})}</div>
-                            <div class="dr-note-excerpt">${n.text}</div>
+                ${filteredNotes.map(n => `
+                    <div class="dr-note-item" onclick="DiaryModule.openNoteModal(${n.id})">
+                        <div class="dr-note-date">${new Date(n.date).toLocaleDateString('ru-RU', {day:'numeric', month:'long'})}</div>
+                        <div class="dr-note-text">${n.text}</div>
+                    </div>
+                `).join('')}
+            </div>
+
+            ${this.editingMoodDate ? `
+                <div class="dr-modal-bg" onclick="DiaryModule.editingMoodDate=null; DiaryModule.render()">
+                    <div class="dr-modal-content" onclick="event.stopPropagation()">
+                        <h3 style="text-align:center; margin-top:0;">Настроение</h3>
+                        <div class="dr-input-block">
+                            <label class="dr-label">Дата</label>
+                            <input type="date" id="dr-mood-date-field" class="dr-input" value="${this.editingMoodDate}">
                         </div>
-                    `).join('') || '<div style="text-align:center; color:#8E8E93; padding:40px;">Нет записей за этот месяц</div>'}
+                        <div class="dr-mood-grid">
+                            ${Object.entries(this.moodConfig).map(([key, cfg]) => `
+                                <div class="dr-mood-opt ${this.moodData[this.editingMoodDate]?.type === key ? 'active' : ''}" data-type="${key}" onclick="document.querySelectorAll('.dr-mood-opt').forEach(o=>o.classList.remove('active')); this.classList.add('active')">
+                                    <span class="material-icons" style="color:${cfg.color}">${cfg.icon}</span>
+                                    <div style="font-size:10px; font-weight:700; margin-top:4px;">${cfg.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="dr-input-block">
+                            <label class="dr-label">Заметка</label>
+                            <textarea id="dr-mood-note-field" class="dr-input" rows="2" placeholder="Как прошел день?">${this.moodData[this.editingMoodDate]?.note || ''}</textarea>
+                        </div>
+                        <button class="dr-save-btn" onclick="DiaryModule.saveMood()">Сохранить</button>
+                        ${this.moodData[this.editingMoodDate] ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700;" onclick="DiaryModule.deleteMood('${this.editingMoodDate}')">Удалить</div>` : ''}
+                    </div>
                 </div>
-            </div>
-            ${this.editingMoodDate ? this.renderMoodModal() : ''}
-            ${this.editingNoteId ? this.renderNoteModal() : ''}
+            ` : ''}
+
+            ${this.editingNoteId ? `
+                <div class="dr-modal-bg" onclick="DiaryModule.editingNoteId=null; DiaryModule.render()">
+                    <div class="dr-modal-content" onclick="event.stopPropagation()">
+                        <h3 style="text-align:center; margin-top:0;">Новая запись</h3>
+                        <div class="dr-input-block">
+                            <label class="dr-label">Дата</label>
+                            <input type="date" id="dr-note-date-field" class="dr-input" value="${this.editingNoteId === 'new' ? today : this.notesData.find(n => n.id == this.editingNoteId).date}">
+                        </div>
+                        <div class="dr-input-block">
+                            <label class="dr-label">Текст</label>
+                            <textarea id="dr-note-text-field" class="dr-input" rows="8" placeholder="Пиши здесь...">${this.editingNoteId === 'new' ? '' : this.notesData.find(n => n.id == this.editingNoteId).text}</textarea>
+                        </div>
+                        <button class="dr-save-btn" onclick="DiaryModule.saveNote()">Сохранить</button>
+                        ${this.editingNoteId !== 'new' ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700;" onclick="DiaryModule.deleteNote(${this.editingNoteId})">Удалить</div>` : ''}
+                    </div>
+                </div>
+            ` : ''}
         `;
     },
 
-    renderMoodModal: function() {
-        const existing = this.moodData[this.editingMoodDate];
+    renderStats: function() {
         return `
-            <div class="dr-modal-overlay" onclick="DiaryModule.editingMoodDate=null; DiaryModule.render()">
-                <div class="dr-modal" onclick="event.stopPropagation()">
-                    <div class="dr-modal-h">Как вы себя чувствуете?</div>
-                    
-                    <div class="dr-form-item">
-                        <label class="dr-form-label">Дата</label>
-                        <input type="date" id="dr-mood-date-field" class="dr-form-input" value="${this.editingMoodDate}">
-                    </div>
-
-                    <div class="dr-mood-selector">
-                        ${Object.entries(this.moodConfig).map(([key, cfg]) => `
-                            <div class="dr-mood-opt ${existing?.type === key ? 'active' : ''}" data-type="${key}" onclick="document.querySelectorAll('.dr-mood-opt').forEach(o=>o.classList.remove('active')); this.classList.add('active')">
-                                <span class="material-icons" style="color:${cfg.color}">${cfg.icon}</span>
-                                <span>${cfg.label}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="dr-form-item">
-                        <label class="dr-form-label">Заметка</label>
-                        <textarea id="dr-mood-note-field" class="dr-form-input" rows="2" placeholder="Пару слов о дне...">${existing?.note || ''}</textarea>
-                    </div>
-
-                    <div class="dr-btn-group">
-                        <button class="dr-btn dr-btn-cancel" onclick="DiaryModule.editingMoodDate=null; DiaryModule.render()">Отмена</button>
-                        <button class="dr-btn dr-btn-save" onclick="DiaryModule.saveMood()">Сохранить</button>
-                        ${existing ? `<button class="dr-btn dr-btn-delete" onclick="DiaryModule.deleteMood('${this.editingMoodDate}')">Удалить</button>` : ''}
-                    </div>
+            <div class="dr-wrap">
+                <div style="display:flex; align-items:center; margin-bottom:20px;">
+                    <span class="material-icons-outlined" onclick="DiaryModule.currentView='main'; DiaryModule.render()">chevron_left</span>
+                    <span style="font-weight:800; font-size:20px; margin-left:10px;">Статистика</span>
+                </div>
+                <div class="dr-card" style="text-align:center; padding:50px 20px;">
+                    тут будут графики...
                 </div>
             </div>
         `;
-    },
-
-    renderNoteModal: function() {
-        const note = this.editingNoteId === 'new' ? null : this.notesData.find(n => n.id == this.editingNoteId);
-        return `
-            <div class="dr-modal-overlay" onclick="DiaryModule.editingNoteId=null; DiaryModule.render()">
-                <div class="dr-modal" onclick="event.stopPropagation()">
-                    <div class="dr-modal-h">${note ? 'Правка записи' : 'Новая запись'}</div>
-                    
-                    <div class="dr-form-item">
-                        <label class="dr-form-label">Дата</label>
-                        <input type="date" id="dr-note-date-field" class="dr-form-input" value="${note ? note.date : new Date().toISOString().split('T')[0]}">
-                    </div>
-
-                    <div class="dr-form-item">
-                        <label class="dr-form-label">Текст дневника</label>
-                        <textarea id="dr-note-text-field" class="dr-form-input" rows="6" placeholder="О чем ты думаешь?">${note ? note.text : ''}</textarea>
-                    </div>
-
-                    <div class="dr-btn-group">
-                        <button class="dr-btn dr-btn-cancel" onclick="DiaryModule.editingNoteId=null; DiaryModule.render()">Отмена</button>
-                        <button class="dr-btn dr-btn-save" onclick="DiaryModule.saveNote()">Сохранить</button>
-                        ${note ? `<button class="dr-btn dr-btn-delete" onclick="DiaryModule.deleteNote(${note.id})">Удалить</button>` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    renderStats: function(months) {
-        // Код статистики (круг и точки) остается прежним, только обновляем стили под dr-wrap
-        return `<div class="dr-wrap">
-            <div class="dr-header">
-                <span class="material-icons dr-nav-btn" onclick="DiaryModule.currentView='main'; DiaryModule.render()">chevron_left</span>
-                <h1 style="font-size:22px; font-weight:800; margin-left:10px; flex-grow:1;">Статистика</h1>
-            </div>
-            <div class="dr-card" style="text-align:center; padding:40px;">График строится на основе ваших отметок настроения за год.</div>
-        </div>`;
     },
 
     changeMonth: function(dir) {
@@ -268,15 +240,10 @@ const DiaryModule = {
         this.render();
     },
 
-    attachAutoResize: function() {
-        const tx = document.querySelectorAll('textarea.dr-form-input');
-        tx.forEach(el => {
-            el.style.height = 'auto';
-            el.style.height = (el.scrollHeight) + 'px';
-            el.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-            });
+    initTextAreas: function() {
+        document.querySelectorAll('textarea.dr-input').forEach(el => {
+            el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
+            el.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; });
         });
     }
 };
