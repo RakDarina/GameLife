@@ -48,26 +48,32 @@ const CyclePage = {
         const dateStr = this.formatDate(date);
         const entry = this.state.history[dateStr];
 
+        // 1. Ручные отметки - всегда приоритет
         if (entry?.period) return 'menstruation';
 
         const lastStart = this.getLastPeriodStart(date);
-        if (!lastStart) return 'unknown';
+        if (!lastStart) return 'none';
 
-        const diffTime = Math.ceil((date - lastStart) / (1000 * 60 * 60 * 24));
+        const diffTime = Math.floor((date - lastStart) / (1000 * 60 * 60 * 24));
         const dayOfCycle = diffTime + 1;
 
-        // Приоритет прогноза: если день попадает на предполагаемое начало следующего цикла
-        if (dayOfCycle > this.state.cycleLength) {
-            const overdueDays = dayOfCycle - this.state.cycleLength;
-            if (overdueDays <= this.state.periodLength) return 'prediction';
-            return 'late';
+        // 2. Логика прогноза (пунктир)
+        // Если день цикла больше длины цикла, проверяем не попадает ли он в начало следующего
+        const cycleDayNormalized = ((dayOfCycle - 1) % this.state.cycleLength) + 1;
+        
+        if (cycleDayNormalized >= 1 && cycleDayNormalized <= this.state.periodLength) {
+            // Рисуем прогноз только для будущих дат или текущей, если нет реальных месячных
+            if (date >= new Date().setHours(0,0,0,0)) return 'prediction';
         }
 
-        if (dayOfCycle >= 1 && dayOfCycle <= this.state.periodLength) return 'menstruation';
-        if (dayOfCycle >= 12 && dayOfCycle <= 16) return 'ovulation';
-        if (dayOfCycle <= 11) return 'follicular';
+        // 3. Другие фазы (только внутри текущего цикла)
+        if (dayOfCycle > 0 && dayOfCycle <= this.state.cycleLength) {
+            if (dayOfCycle >= 12 && dayOfCycle <= 16) return 'ovulation';
+            if (dayOfCycle <= 11) return 'follicular';
+        }
         
-        return 'luteal'; // Теперь будет без цвета в стилях
+        // 4. Все остальное — без цвета
+        return 'none';
     },
 
     changeMonth: function(delta) {
@@ -91,22 +97,15 @@ const CyclePage = {
                 .cy-title { font-size: 18px; font-weight: 700; text-transform: capitalize; }
                 .cy-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 20px; }
                 .cy-weekday { text-align: center; font-size: 12px; color: #8E8E93; padding-bottom: 5px; font-weight: 600; }
-                .cy-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px; position: relative; cursor: pointer; }
+                .cy-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px; position: relative; cursor: pointer; border: 2px solid transparent; }
                 
                 .cy-phase-menstruation { background: #FFCDD2; color: #B71C1C; }
-                
-                /* ПРОГНОЗ: РОЗОВЫЙ ПУНКТИР */
-                .cy-phase-prediction { border: 2px dashed #FFCDD2; color: #B71C1C; background: transparent; }
-                
+                .cy-phase-prediction { border: 2px dashed #FFCDD2 !important; color: #B71C1C; background: transparent; }
                 .cy-phase-follicular { background: #E3F2FD; color: #0D47A1; }
                 .cy-phase-ovulation { background: #81D4FA; color: #01579B; border: 2px solid #0288D1; font-weight: 700; }
+                .cy-phase-none { background: transparent; color: #1C1C1E; }
                 
-                /* ЛЮТЕИНОВАЯ ФАЗА: БЕЗ ЦВЕТА */
-                .cy-phase-luteal { background: transparent; color: #1C1C1E; }
-                
-                .cy-phase-late { background: #FFE0B2; border: 1px dashed #FF9800; }
-
-                .cy-today { background: #1C1C1E !important; color: #fff !important; }
+                .cy-today { background: #1C1C1E !important; color: #fff !important; border-color: #1C1C1E !important; }
                 .cy-heart { position: absolute; bottom: -2px; right: -2px; font-size: 10px; }
 
                 .cy-info-card { background: #FFF0F5; border-radius: 20px; padding: 15px; margin-top: 10px; border: 1px solid #FFCDD2; }
@@ -114,7 +113,7 @@ const CyclePage = {
                 
                 .cy-legend { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 15px; font-size: 12px; }
                 .cy-leg-item { display: flex; align-items: center; margin-bottom: 6px; }
-                .cy-leg-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
+                .cy-leg-dot { width: 14px; height: 14px; border-radius: 50%; margin-right: 10px; display: flex; align-items: center; justify-content: center; }
 
                 .cy-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index: 999; display:flex; align-items:center; justify-content:center; }
                 .cy-modal { background:#fff; padding: 20px; border-radius: 24px; width: 80%; text-align: center; }
@@ -151,18 +150,19 @@ const CyclePage = {
 
                 <div class="cy-legend">
                     <div style="font-weight:700; margin-bottom:8px;">Что значат цвета:</div>
-                    <div class="cy-leg-item"><div class="cy-leg-dot" style="background:#FFCDD2;"></div> Менструация (отмечено)</div>
+                    <div class="cy-leg-item"><div class="cy-leg-dot" style="background:#FFCDD2;"></div> Месячные (отмечено)</div>
                     <div class="cy-leg-item"><div class="cy-leg-dot" style="border:2px dashed #FFCDD2;"></div> Прогноз менструации</div>
                     <div class="cy-leg-item"><div class="cy-leg-dot" style="background:#81D4FA;"></div> Овуляция (пик)</div>
                     <div class="cy-leg-item"><div class="cy-leg-dot" style="background:#E3F2FD;"></div> Фертильные дни</div>
-                    <div class="cy-leg-item"><div class="cy-leg-dot" style="border:1px solid #ddd; background:#fff;"></div> Обычный день</div>
+                    <div class="cy-leg-item"><div class="cy-leg-dot" style="border:1px solid #ddd;"></div> Обычный день</div>
                 </div>
             </div>
         `;
     },
 
     renderCalendarDays: function(year, month) {
-        const firstDay = new Date(year, month, 1).getDay() || 7;
+        const firstDayOfMo = new Date(year, month, 1).getDay();
+        const firstDay = firstDayOfMo === 0 ? 7 : firstDayOfMo; 
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         let html = '';
         for (let i = 1; i < firstDay; i++) { html += `<div></div>`; }
@@ -231,7 +231,11 @@ const CyclePage = {
         this.render();
     },
 
-    formatDate: function(date) { return date.toISOString().split('T')[0]; },
+    formatDate: function(date) { 
+        const d = new Date(date);
+        d.setHours(0,0,0,0);
+        return d.toISOString().split('T')[0]; 
+    },
 
     getPredictionText: function(today) {
         const lastStart = this.getLastPeriodStart(today);
@@ -245,7 +249,7 @@ const CyclePage = {
     },
 
     getPhaseTitle: function(phase) {
-        const titles = { 'menstruation': '🩸 Менструация', 'prediction': '🩺 Прогноз', 'follicular': '🌱 Фолликулярная фаза', 'ovulation': '🥚 Овуляция', 'luteal': '🍂 Обычный день', 'late': '⚠️ Задержка' };
+        const titles = { 'menstruation': '🩸 Менструация', 'prediction': '🩺 Прогноз', 'follicular': '🌱 Растем', 'ovulation': '🥚 Овуляция', 'none': '✨ Обычный день' };
         return titles[phase] || 'Твой цикл';
     },
 
@@ -255,8 +259,7 @@ const CyclePage = {
             'prediction': 'Скоро начнется новый цикл. Подготовь средства гигиены.',
             'follicular': 'Сил становится больше! Самое время для новых дел и тренировок.',
             'ovulation': 'Ты на пике привлекательности и энергии. Настроение супер!',
-            'luteal': 'Период спокойствия. Организм готовится к новому циклу.',
-            'late': 'Если задержка большая, стоит снизить уровень стресса или сделать тест.'
+            'none': 'Период спокойствия. Организм готовится к новому циклу.'
         };
         return advice[phase] || 'Начни отмечать дни, чтобы видеть советы.';
     }
