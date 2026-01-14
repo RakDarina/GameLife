@@ -3,10 +3,9 @@
    ========================================== */
 
 const WeightApp = {
-    // Уникальное хранилище данных
     state: {
-        currentMonth: new Date(), // Какой месяц смотрим
-        data: {} // Формат: { "2026-02-14": { weight: 65, fat: 20, workout: true, fastfood: false, ... } }
+        currentMonth: new Date(),
+        data: {} // { "2026-02-14": { weight: 65, workout: true, fastfood: false, ... } }
     },
 
     init: function() {
@@ -14,371 +13,238 @@ const WeightApp = {
         this.render();
     },
 
-    saveData: function() {
-        localStorage.setItem('GL_Weight_App', JSON.stringify(this.state.data));
-    },
-
     loadData: function() {
-        const saved = localStorage.getItem('GL_Weight_App');
-        if (saved) {
-            this.state.data = JSON.parse(saved);
-        }
+        const saved = localStorage.getItem('GL_Weight_App_V2');
+        if (saved) this.state.data = JSON.parse(saved);
     },
 
-    // --- ЛОГИКА ---
+    saveData: function() {
+        localStorage.setItem('GL_Weight_App_V2', JSON.stringify(this.state.data));
+    },
 
-    // Определение картинки персонажа (60кг = stage1 ... 70кг+ = stage6)
+    // Логика стадий персонажа
     getCharacterStage: function() {
-        // Ищем последнюю запись с весом
         const dates = Object.keys(this.state.data).sort().reverse();
-        let lastWeight = 70; // Дефолтный вес, если нет записей
-
-        for (let date of dates) {
-            if (this.state.data[date].weight) {
-                lastWeight = this.state.data[date].weight;
-                break;
-            }
-        }
-
-        // Логика стадий
-        if (lastWeight <= 60) return 1;
-        if (lastWeight >= 70) return 6;
-        
-        // Промежуточные (61-69 кг распределяем на stage 2,3,4,5)
-        // Диапазон 10 кг. Шаг примерно 2 кг.
-        if (lastWeight <= 62) return 2;
-        if (lastWeight <= 65) return 3;
-        if (lastWeight <= 67) return 4;
+        let lastW = 70;
+        for (let d of dates) { if (this.state.data[d].weight) { lastW = this.state.data[d].weight; break; } }
+        if (lastW <= 60) return 1;
+        if (lastW >= 70) return 6;
+        if (lastW <= 62) return 2;
+        if (lastW <= 65) return 3;
+        if (lastW <= 67) return 4;
         return 5;
     },
 
-    changeMonth: function(delta) {
-        this.state.currentMonth.setMonth(this.state.currentMonth.getMonth() + delta);
-        this.render();
-    },
-
-    // --- УПРАВЛЕНИЕ ЗАПИСЯМИ ---
-
-    toggleHabit: function(dateStr, type) {
-        // type = 'workout' или 'fastfood'
-        if (!this.state.data[dateStr]) this.state.data[dateStr] = {};
-        
-        // Переключаем true/false
-        this.state.data[dateStr][type] = !this.state.data[dateStr][type];
-        
-        this.saveData();
-        this.render();
-    },
-
-    saveMeasurement: function(dateStr, formData) {
-        if (!this.state.data[dateStr]) this.state.data[dateStr] = {};
-        
-        // Объединяем старые данные дня с новыми измерениями
-        this.state.data[dateStr] = { ...this.state.data[dateStr], ...formData };
-        
-        this.saveData();
-        this.render();
-    },
-
-    deleteRecord: function(dateStr) {
-        if (confirm('Удалить запись за ' + dateStr + '?')) {
-            delete this.state.data[dateStr];
-            this.saveData();
-            this.render();
-        }
-    },
-
     // --- РЕНДЕРИНГ ---
-
     render: function() {
         const app = document.getElementById('app-viewport');
         const stage = this.getCharacterStage();
         const year = this.state.currentMonth.getFullYear();
         const month = this.state.currentMonth.getMonth();
-        const monthName = this.state.currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+        const monthName = this.state.currentMonth.toLocaleString('ru-RU', { month: 'long', year: 'numeric' });
 
-        // Стили (префикс wp- для уникальности)
         const styles = `
             <style>
-                .wp-container { padding-bottom: 80px; animation: fadeIn 0.3s; color: #333; }
-                .wp-header { padding: 10px 0; color: #6c5ce7; font-weight: 700; cursor: pointer; }
+                .wa-container { padding-bottom: 80px; animation: fadeIn 0.3s; font-family: sans-serif; }
+                .wa-header { padding: 10px; color: #6c5ce7; font-weight: 700; cursor: pointer; }
+                .wa-char-box { text-align: center; margin-bottom: 20px; }
+                .wa-char-img { height: 160px; object-fit: contain; }
                 
-                /* Персонаж */
-                .wp-char-box { text-align: center; margin-bottom: 20px; }
-                .wp-char-img { height: 180px; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
-
-                /* Календарь */
-                .wp-calendar { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-                .wp-cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 16px; text-transform: capitalize; }
-                .wp-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-                .wp-cal-day-name { text-align: center; font-size: 12px; color: #888; margin-bottom: 5px; }
-                .wp-day { 
+                .wa-calendar { background: #fff; border-radius: 20px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+                .wa-cal-nav { display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; text-transform: capitalize; }
+                .wa-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+                .wa-day { 
                     aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; 
                     align-items: center; justify-content: center; font-size: 14px; position: relative; 
-                    background: #f9f9f9; border: 1px solid transparent;
+                    background: #f9f9f9; cursor: pointer;
                 }
+                .wa-day.has-workout { background: #e3f9e5; color: #2e7d32; border: 1px solid #badc58; }
+                .wa-day.has-fastfood { background: #fff0f0; color: #c0392b; border: 1px solid #ff7979; }
+                .wa-day.has-both { background: #fff8e1; border: 1px solid #ffcc80; }
                 
-                /* Статусы дней */
-                .wp-day.workout { background: #dff9fb; border-color: #badc58; color: #2e7d32; } /* Зеленый */
-                .wp-day.fastfood { background: #ffcccc; border-color: #ff4d4d; color: #b71c1c; } /* Красный */
-                .wp-day.both { background: #fff3cd; border-color: #ff9f43; } /* Если и то и то */
-                
-                .wp-icon { font-size: 10px; position: absolute; bottom: 2px; }
-                .wp-icon-top { font-size: 10px; position: absolute; top: 2px; right: 2px; }
+                .wa-bottom-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 10px; }
+                .wa-btn { border: none; padding: 15px; border-radius: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+                .btn-measure { background: #7ed6df; color: #013846; }
+                .btn-history { background: #dff9fb; color: #333; }
 
-                /* Кнопки меню */
-                .wp-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-                .wp-btn { 
-                    border: none; padding: 15px; border-radius: 15px; font-weight: 600; font-size: 14px; 
-                    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.1s;
-                }
-                .wp-btn:active { transform: scale(0.98); }
-                .btn-green { background: #badc58; color: #134e08; }
-                .btn-red { background: #ff7979; color: #570000; }
-                .btn-blue { background: #7ed6df; color: #013846; }
-                .btn-gray { background: #dff9fb; color: #333; }
-
-                /* Модальные окна */
-                .wp-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.4); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-                .wp-modal { background: #fff; padding: 25px; border-radius: 20px; width: 85%; max-height: 90vh; overflow-y: auto; }
-                .wp-input { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ddd; border-radius: 8px; }
-                .wp-label { font-size: 12px; font-weight: bold; color: #666; }
-                
-                /* История */
-                .wp-hist-item { background: #fff; border-radius: 12px; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee; }
+                .wa-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; }
+                .wa-modal { background:#fff; padding:20px; border-radius:20px; width:85%; max-height:80vh; overflow-y:auto; }
+                .wa-input { width:100%; padding:10px; margin:8px 0; border:1px solid #ddd; border-radius:10px; }
+                .wa-choice-btn { width:100%; padding:12px; margin:5px 0; border-radius:12px; border:none; font-weight:600; cursor:pointer; }
             </style>
         `;
 
         app.innerHTML = `
             ${styles}
-            <div class="wp-container">
-                <div class="wp-header" onclick="loadModule('./health.js')">‹ Назад в Здоровье</div>
-
-                <div class="wp-char-box">
-                    <img src="./stage${stage}.png" class="wp-char-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
-                    <div style="font-size:12px; color:#888; margin-top:5px;">Текущая форма: Stage ${stage}</div>
+            <div class="wa-container">
+                <div class="wa-header" onclick="loadModule('./health.js')">‹ Назад</div>
+                
+                <div class="wa-char-box">
+                    <img src="./stage${stage}.png" class="wa-char-img">
                 </div>
 
-                <div class="wp-calendar">
-                    <div class="wp-cal-nav">
-                        <span onclick="WeightApp.changeMonth(-1)" style="cursor:pointer">‹</span>
+                <div class="wa-calendar">
+                    <div class="wa-cal-nav">
+                        <span onclick="WeightApp.changeMonth(-1)">‹</span>
                         <span>${monthName}</span>
-                        <span onclick="WeightApp.changeMonth(1)" style="cursor:pointer">›</span>
+                        <span onclick="WeightApp.changeMonth(1)">›</span>
                     </div>
-                    <div class="wp-cal-grid">
-                        <div class="wp-cal-day-name">Пн</div><div class="wp-cal-day-name">Вт</div><div class="wp-cal-day-name">Ср</div>
-                        <div class="wp-cal-day-name">Чт</div><div class="wp-cal-day-name">Пт</div><div class="wp-cal-day-name">Сб</div>
-                        <div class="wp-cal-day-name">Вс</div>
-                        ${this.renderCalendarDays(year, month)}
-                    </div>
+                    <div class="wa-cal-grid">${this.renderDays(year, month)}</div>
                 </div>
 
-                <div class="wp-controls">
-                    <button class="wp-btn btn-green" onclick="WeightApp.openDateModal('workout')">
-                        <span>💪 Тренировка</span>
-                    </button>
-                    <button class="wp-btn btn-red" onclick="WeightApp.openDateModal('fastfood')">
-                        <span>🍔 Фастфуд</span>
-                    </button>
-                    <button class="wp-btn btn-blue" onclick="WeightApp.openMeasureModal()">
-                        <span>⚖️ Измерить</span>
-                    </button>
-                    <button class="wp-btn btn-gray" onclick="WeightApp.openHistoryModal()">
-                        <span>📜 История</span>
-                    </button>
+                <div class="wa-bottom-btns">
+                    <button class="wa-btn btn-measure" onclick="WeightApp.openMeasureModal()">⚖️ Измерить</button>
+                    <button class="wa-btn btn-history" onclick="WeightApp.openHistoryModal()">📜 История</button>
                 </div>
             </div>
         `;
     },
 
-    renderCalendarDays: function(year, month) {
-        const firstDay = new Date(year, month, 1).getDay() || 7; 
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+    renderDays: function(y, m) {
+        const first = new Date(y, m, 1).getDay() || 7;
+        const total = new Date(y, m + 1, 0).getDate();
         let html = '';
+        for (let i = 1; i < first; i++) html += '<div></div>';
+        for (let d = 1; d <= total; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const e = this.state.data[dateStr] || {};
+            let cls = 'wa-day';
+            if (e.workout && e.fastfood) cls += ' has-both';
+            else if (e.workout) cls += ' has-workout';
+            else if (e.fastfood) cls += ' has-fastfood';
 
-        // Пустые ячейки
-        for (let i = 1; i < firstDay; i++) html += `<div></div>`;
-
-        // Дни
-        for (let day = 1; day <= daysInMonth; day++) {
-            // Формируем дату YYYY-MM-DD с учетом часового пояса (простой способ)
-            const dateObj = new Date(year, month, day);
-            const dateStr = this.formatDate(dateObj);
-            
-            const entry = this.state.data[dateStr] || {};
-            
-            // Определяем классы
-            let classes = 'wp-day';
-            let icons = '';
-
-            if (entry.workout && entry.fastfood) {
-                classes += ' both';
-                icons += '<span class="wp-icon">💪🍔</span>';
-            } else if (entry.workout) {
-                classes += ' workout';
-                icons += '<span class="wp-icon">💪</span>';
-            } else if (entry.fastfood) {
-                classes += ' fastfood';
-                icons += '<span class="wp-icon">🍔</span>';
-            }
-
-            // Если есть вес, добавим точку сверху
-            if (entry.weight) icons += '<span class="wp-icon-top">⚖️</span>';
-
-            html += `<div class="${classes}">${day} ${icons}</div>`;
+            html += `<div class="${cls}" onclick="WeightApp.openDayMenu('${dateStr}')">
+                ${d}
+                <div style="font-size:8px; position:absolute; bottom:2px;">
+                    ${e.workout ? '💪' : ''}${e.fastfood ? '🍔' : ''}
+                </div>
+                ${e.weight ? '<div style="position:absolute; top:2px; right:2px; font-size:8px;">●</div>' : ''}
+            </div>`;
         }
         return html;
     },
 
-    // --- МОДАЛЬНЫЕ ОКНА ---
-
-    // 1. Модалка выбора даты для Тренировки/Фастфуда
-    openDateModal: function(type) {
-        const title = type === 'workout' ? 'Добавить/Убрать тренировку' : 'Добавить/Убрать фастфуд';
-        const color = type === 'workout' ? '#badc58' : '#ff7979';
-        
-        const today = this.formatDate(new Date());
-
+    // --- МЕНЮ ДНЯ (При нажатии на дату) ---
+    openDayMenu: function(dateStr) {
         const html = `
-            <h3 style="margin-top:0">${title}</h3>
-            <p class="wp-label">Выберите дату:</p>
-            <input type="date" id="wp-date-picker" class="wp-input" value="${today}">
-            <button class="wp-btn" style="width:100%; background:${color}; color:#fff;" onclick="WeightApp.submitHabit('${type}')">
-                Применить
-            </button>
-            <button class="wp-btn" style="width:100%; background:#eee; margin-top:10px" onclick="document.querySelector('.wp-modal-bg').remove()">Отмена</button>
+            <h3 style="margin-top:0; text-align:center;">${dateStr}</h3>
+            <button class="wa-choice-btn" style="background:#e3f9e5;" onclick="WeightApp.openActionChoice('${dateStr}', 'workout')">💪 Тренировка</button>
+            <button class="wa-choice-btn" style="background:#fff0f0;" onclick="WeightApp.openActionChoice('${dateStr}', 'fastfood')">🍔 Фастфуд</button>
+            <button class="wa-choice-btn" style="background:#eee;" onclick="WeightApp.closeModal()">Отмена</button>
         `;
         this.showModal(html);
     },
 
-    submitHabit: function(type) {
-        const date = document.getElementById('wp-date-picker').value;
-        if (date) {
-            this.toggleHabit(date, type);
-            document.querySelector('.wp-modal-bg').remove();
-        }
+    openActionChoice: function(dateStr, type) {
+        const title = type === 'workout' ? 'Тренировка' : 'Фастфуд';
+        const html = `
+            <h3 style="margin-top:0; text-align:center;">${title}</h3>
+            <button class="wa-choice-btn" style="background:#badc58;" onclick="WeightApp.updateHabit('${dateStr}', '${type}', true)">Добавить</button>
+            <button class="wa-choice-btn" style="background:#ff7979; color:#fff;" onclick="WeightApp.updateHabit('${dateStr}', '${type}', false)">Убрать</button>
+            <button class="wa-choice-btn" style="background:#eee;" onclick="WeightApp.closeModal()">Назад</button>
+        `;
+        this.showModal(html);
     },
 
-    // 2. Модалка измерений
-    openMeasureModal: function() {
-        const today = this.formatDate(new Date());
+    updateHabit: function(dateStr, type, val) {
+        if (!this.state.data[dateStr]) this.state.data[dateStr] = {};
+        this.state.data[dateStr][type] = val;
+        this.saveData();
+        this.closeModal();
+        this.render();
+    },
+
+    // --- ИЗМЕРЕНИЯ ---
+    openMeasureModal: function(editDate = null) {
+        const today = editDate || new Date().toISOString().split('T')[0];
+        const e = this.state.data[today] || {};
+        
         const html = `
-            <h3 style="margin-top:0">Новое измерение</h3>
-            
-            <p class="wp-label">Дата:</p>
-            <input type="date" id="m-date" class="wp-input" value="${today}">
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div>
-                    <p class="wp-label">Вес (кг):</p>
-                    <input type="number" id="m-weight" class="wp-input" placeholder="0.0">
-                </div>
-                <div>
-                    <p class="wp-label">Жир (%):</p>
-                    <input type="number" id="m-fat" class="wp-input" placeholder="%">
-                </div>
+            <h3 style="margin-top:0">${editDate ? 'Редактировать' : 'Новый замер'}</h3>
+            <input type="date" id="m-date" class="wa-input" value="${today}" ${editDate ? 'disabled' : ''}>
+            <input type="number" id="m-w" class="wa-input" placeholder="Вес (кг)" value="${e.weight || ''}">
+            <input type="number" id="m-f" class="wa-input" placeholder="Жир (%)" value="${e.fat || ''}">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input type="number" id="m-p" class="wa-input" placeholder="Белок" value="${e.prot || ''}">
+                <input type="number" id="m-wa" class="wa-input" placeholder="Вода" value="${e.water || ''}">
             </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div>
-                    <p class="wp-label">Белок:</p>
-                    <input type="number" id="m-protein" class="wp-input">
-                </div>
-                <div>
-                    <p class="wp-label">Вода (л):</p>
-                    <input type="number" id="m-water" class="wp-input">
-                </div>
+            <p style="font-size:12px; margin:10px 0 5px;">Объемы (см):</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+                <input type="number" id="m-t" class="wa-input" placeholder="Талия" value="${e.waist || ''}">
+                <input type="number" id="m-g" class="wa-input" placeholder="Грудь" value="${e.chest || ''}">
+                <input type="number" id="m-b" class="wa-input" placeholder="Бедра" value="${e.hips || ''}">
             </div>
-
-            <p class="wp-label">Объемы (см):</p>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px;">
-                <input type="number" id="m-waist" class="wp-input" placeholder="Талия">
-                <input type="number" id="m-chest" class="wp-input" placeholder="Грудь">
-                <input type="number" id="m-hips" class="wp-input" placeholder="Бедра">
-            </div>
-
-            <button class="wp-btn btn-blue" style="width:100%; color:#fff" onclick="WeightApp.submitMeasure()">Сохранить</button>
-            <button class="wp-btn" style="width:100%; background:#eee; margin-top:10px" onclick="document.querySelector('.wp-modal-bg').remove()">Отмена</button>
+            <button class="wa-choice-btn" style="background:#7ed6df;" onclick="WeightApp.submitMeasure()">Сохранить</button>
+            <button class="wa-choice-btn" style="background:#eee;" onclick="WeightApp.closeModal()">Отмена</button>
         `;
         this.showModal(html);
     },
 
     submitMeasure: function() {
         const date = document.getElementById('m-date').value;
-        const data = {
-            weight: parseFloat(document.getElementById('m-weight').value) || null,
-            fat: parseFloat(document.getElementById('m-fat').value) || null,
-            protein: parseFloat(document.getElementById('m-protein').value) || null,
-            water: parseFloat(document.getElementById('m-water').value) || null,
-            waist: parseFloat(document.getElementById('m-waist').value) || null,
-            chest: parseFloat(document.getElementById('m-chest').value) || null,
-            hips: parseFloat(document.getElementById('m-hips').value) || null,
-        };
+        if (!this.state.data[date]) this.state.data[date] = {};
+        
+        this.state.data[date].weight = parseFloat(document.getElementById('m-w').value) || null;
+        this.state.data[date].fat = parseFloat(document.getElementById('m-f').value) || null;
+        this.state.data[date].prot = parseFloat(document.getElementById('m-p').value) || null;
+        this.state.data[date].water = parseFloat(document.getElementById('m-wa').value) || null;
+        this.state.data[date].waist = parseFloat(document.getElementById('m-t').value) || null;
+        this.state.data[date].chest = parseFloat(document.getElementById('m-g').value) || null;
+        this.state.data[date].hips = parseFloat(document.getElementById('m-b').value) || null;
 
-        // Удаляем пустые ключи
-        Object.keys(data).forEach(key => data[key] === null && delete data[key]);
-
-        if (date && Object.keys(data).length > 0) {
-            this.saveMeasurement(date, data);
-            document.querySelector('.wp-modal-bg').remove();
-        } else {
-            alert('Заполните хотя бы одно поле и дату');
-        }
+        this.saveData();
+        this.closeModal();
+        this.render();
     },
 
-    // 3. Модалка Истории
+    // --- ИСТОРИЯ (Только замеры) ---
     openHistoryModal: function() {
-        // Сортируем даты по убыванию
-        const dates = Object.keys(this.state.data).sort().reverse();
-        
-        let listHtml = '';
-        if (dates.length === 0) listHtml = '<p style="text-align:center; color:#888">Записей нет</p>';
-
-        dates.forEach(date => {
-            const entry = this.state.data[date];
-            // Формируем описание строки
-            let details = [];
-            if (entry.weight) details.push(`<b>${entry.weight} кг</b>`);
-            if (entry.workout) details.push(`💪`);
-            if (entry.fastfood) details.push(`🍔`);
-            if (entry.waist) details.push(`Тал: ${entry.waist}`);
-            
-            listHtml += `
-                <div class="wp-hist-item">
+        const dates = Object.keys(this.state.data).filter(d => this.state.data[d].weight).sort().reverse();
+        let items = dates.map(d => {
+            const e = this.state.data[d];
+            return `
+                <div style="border-bottom:1px solid #eee; padding:10px 0; display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div style="font-weight:bold; font-size:13px; color:#6c5ce7">${date}</div>
-                        <div style="font-size:12px; margin-top:2px;">${details.join(' | ') || 'Нет данных'}</div>
+                        <div style="font-weight:700; font-size:13px;">${d}</div>
+                        <div style="font-size:12px; color:#666;">Вес: ${e.weight} кг | Талия: ${e.waist || '--'}</div>
                     </div>
-                    <button onclick="WeightApp.deleteRecord('${date}')" style="background:none; border:none; font-size:18px; color:red;">🗑</button>
+                    <div>
+                        <button onclick="WeightApp.openMeasureModal('${d}')" style="border:none; background:none; color:blue; margin-right:10px;">✎</button>
+                        <button onclick="WeightApp.deleteEntry('${d}')" style="border:none; background:none; color:red;">🗑</button>
+                    </div>
                 </div>
             `;
-        });
+        }).join('');
 
         const html = `
-            <h3 style="margin-top:0">История записей</h3>
-            <div style="max-height:60vh; overflow-y:auto; margin-bottom:15px;">
-                ${listHtml}
-            </div>
-            <button class="wp-btn" style="width:100%; background:#eee;" onclick="document.querySelector('.wp-modal-bg').remove()">Закрыть</button>
+            <h3 style="margin-top:0">История замеров</h3>
+            <div style="max-height:50vh; overflow-y:auto;">${items || 'Записей нет'}</div>
+            <button class="wa-choice-btn" style="background:#eee; margin-top:15px;" onclick="WeightApp.closeModal()">Закрыть</button>
         `;
         this.showModal(html);
     },
 
-    // Вспомогательные функции
-    showModal: function(content) {
-        const div = document.createElement('div');
-        div.className = 'wp-modal-bg';
-        div.innerHTML = `<div class="wp-modal">${content}</div>`;
-        document.body.appendChild(div);
+    deleteEntry: function(d) {
+        if(confirm('Удалить замер за ' + d + '?')) {
+            // Удаляем только данные замера, оставляя привычки, если они есть
+            this.state.data[d].weight = null;
+            this.state.data[d].fat = null;
+            // ... (можно очистить всё, если хочешь)
+            this.saveData();
+            this.openHistoryModal(); // Обновить список
+            this.render();
+        }
     },
 
-    formatDate: function(date) {
-        // YYYY-MM-DD корректно
-        const offset = date.getTimezoneOffset();
-        const d = new Date(date.getTime() - (offset*60*1000));
-        return d.toISOString().split('T')[0];
-    }
+    // Вспомогательные
+    changeMonth: function(n) { this.state.currentMonth.setMonth(this.state.currentMonth.getMonth() + n); this.render(); },
+    showModal: function(c) {
+        this.closeModal();
+        const b = document.createElement('div'); b.className = 'wa-modal-bg';
+        b.innerHTML = `<div class="wa-modal">${c}</div>`;
+        document.body.appendChild(b);
+    },
+    closeModal: function() { const m = document.querySelector('.wa-modal-bg'); if(m) m.remove(); }
 };
 
 window.WeightApp = WeightApp;
