@@ -118,7 +118,7 @@ const TherapyModule = {
                     <span class="material-icons-outlined">chevron_left</span> Назад
                 </div>
 
-                <button class="th-book-btn" onclick="window.open('https://google.com', '_blank')">
+                <button class="th-book-btn" onclick="window.open('https://prodoctorov.ru/samara/vrach/468194-ivanova/#speciality=psihoterapevt%23filter=default', '_blank')">
                     Записаться к психотерапевту
                 </button>
 
