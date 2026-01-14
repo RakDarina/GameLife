@@ -51,7 +51,7 @@ const HealthPage = {
                         <div class="hl-stat">Через 5 дн.</div>
                     </div>
 
-                     <div class="hl-card" style="background: #E8F5E9;" onclick="alert('Скоро...')">
+                     <div class="hl-card" style="background: #E8F5E9;" onclick="window.open('https://my-fitness-rpg.vercel.app/', '_blank')">
                         <div class="hl-icon">⚖️</div>
                         <div class="hl-title">Вес</div>
                         <div class="hl-stat">-- кг</div>
