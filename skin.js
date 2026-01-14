@@ -132,9 +132,9 @@ const SkinTracker = {
             for (let i = 0; i < offset; i++) html += `<div></div>`;
             for (let d = 1; d <= daysInMonth; d++) {
                 const dStr = `${this.currentCalYear}-${String(this.currentCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                const hasDmg = failDays.includes(dStr);
+                const hasAnyRecord = this.data.some(r => r.date === dStr);
                 html += `<div class="sk-cal-cell ${this.selectedHistoryDate === dStr ? 'active' : ''}" onclick="SkinTracker.selectedHistoryDate='${dStr}'; SkinTracker.render()">
-                    ${d}${hasDmg ? '<div class="sk-dot"></div>' : ''}
+                    ${d}${hasAnyRecord ? '<div class="sk-dot"></div>' : ''}
                 </div>`;
             }
             return html + `</div>`;
