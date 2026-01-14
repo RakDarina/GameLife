@@ -45,7 +45,7 @@ const HealthPage = {
                         <div class="hl-stat">8ч 12м</div>
                     </div>
 
-                    <div class="hl-card" style="background: #FFEBEE;" onclick="alert('Скоро...')">
+                    <div class="hl-card" style="background: #FFEBEE;" onclick="loadModule('./cycle.js')">
                         <div class="hl-icon">🌸</div>
                         <div class="hl-title">Цикл</div>
                         <div class="hl-stat">Через 5 дн.</div>
