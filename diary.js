@@ -1,5 +1,5 @@
 /* ==========================================
-   ОБНОВЛЕННЫЙ МОДУЛЬ: ДНЕВНИК (diary.js)
+   ПОЛНЫЙ МОДУЛЬ ДНЕВНИКА С ГРАФИКАМИ И ИСПРАВЛЕНИЕМ ДАТ
    ========================================== */
 
 const DiaryModule = {
@@ -26,8 +26,9 @@ const DiaryModule = {
         this.render();
     },
 
-    openMoodModal: function(date = new Date().toISOString().split('T')[0]) {
-        this.editingMoodDate = date;
+    openMoodModal: function(date) {
+        // Если дата не передана, берем сегодня в формате YYYY-MM-DD
+        this.editingMoodDate = date || new Date().toISOString().split('T')[0];
         this.render();
     },
 
@@ -35,6 +36,7 @@ const DiaryModule = {
         const selected = document.querySelector('.dr-mood-opt.active')?.dataset.type;
         const note = document.getElementById('dr-mood-note-field')?.value || '';
         const date = document.getElementById('dr-mood-date-field')?.value;
+        
         if (selected && date) {
             this.moodData[date] = { type: selected, note: note };
             this.editingMoodDate = null;
@@ -43,13 +45,14 @@ const DiaryModule = {
     },
 
     deleteMood: function(date) {
-        if (confirm('Удалить настроение?')) {
+        if (confirm('Удалить настроение за этот день?')) {
             delete this.moodData[date];
             this.editingMoodDate = null;
             this.save();
         }
     },
 
+    // Логика для простых заметок
     openNoteModal: function(id = null) {
         this.editingNoteId = id;
         this.render();
@@ -83,7 +86,7 @@ const DiaryModule = {
 
         const styles = `
             <style>
-                .dr-wrap { animation: fadeIn 0.3s; padding-top: 10px; }
+                .dr-wrap { animation: fadeIn 0.3s; padding-top: 10px; color: #1C1C1E; }
                 .dr-card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
                 .dr-card-title { font-weight: 800; font-size: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
                 
@@ -98,7 +101,6 @@ const DiaryModule = {
                 .dr-note-date { font-size: 12px; color: #8E8E93; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
                 .dr-note-text { font-size: 16px; line-height: 1.5; white-space: pre-wrap; }
 
-                /* Модалки */
                 .dr-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: flex-end; }
                 .dr-modal-content { background: #F2F2F7; width: 100%; border-radius: 30px 30px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
                 
@@ -107,11 +109,16 @@ const DiaryModule = {
                 .dr-input { width: 100%; border: none; background: transparent; font-size: 17px; outline: none; font-family: inherit; resize: none; }
                 
                 .dr-mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-                .dr-mood-opt { text-align: center; opacity: 0.3; transition: 0.2s; }
+                .dr-mood-opt { text-align: center; opacity: 0.3; transition: 0.2s; cursor: pointer; }
                 .dr-mood-opt.active { opacity: 1; transform: scale(1.1); }
-                .dr-mood-opt .material-icons { font-size: 36px; display: block; }
+                .dr-mood-opt .material-icons { font-size: 36px; display: block; margin-bottom: 5px; }
 
                 .dr-save-btn { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 17px; margin-top: 10px; }
+                
+                /* Стили для статистики */
+                .stats-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 15px; }
+                .stats-dot { aspect-ratio: 1; border-radius: 4px; background: #E5E5EA; }
+                
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
@@ -136,7 +143,9 @@ const DiaryModule = {
                 <div class="dr-card">
                     <div class="dr-card-title">
                         <span>Настроение сегодня</span>
-                        <div style="color:#5856D6; font-size:14px;" onclick="DiaryModule.currentView='stats'; DiaryModule.render()">График</div>
+                        <div style="color:#5856D6; font-size:14px; display:flex; align-items:center; gap:4px;" onclick="DiaryModule.currentView='stats'; DiaryModule.render()">
+                            <span class="material-icons" style="font-size:18px;">bar_chart</span> График
+                        </div>
                     </div>
                     ${mood ? `
                         <div class="dr-mood-active" onclick="DiaryModule.openMoodModal('${today}')">
@@ -165,12 +174,12 @@ const DiaryModule = {
                     <span style="font-weight:700; color:#5856D6;">+ Новая запись</span>
                 </div>
 
-                ${filteredNotes.map(n => `
+                ${filteredNotes.length ? filteredNotes.map(n => `
                     <div class="dr-note-item" onclick="DiaryModule.openNoteModal(${n.id})">
                         <div class="dr-note-date">${new Date(n.date).toLocaleDateString('ru-RU', {day:'numeric', month:'long'})}</div>
                         <div class="dr-note-text">${n.text}</div>
                     </div>
-                `).join('')}
+                `).join('') : '<div style="text-align:center; color:#999; margin-top:20px;">Записей пока нет</div>'}
             </div>
 
             ${this.editingMoodDate ? `
@@ -183,18 +192,20 @@ const DiaryModule = {
                         </div>
                         <div class="dr-mood-grid">
                             ${Object.entries(this.moodConfig).map(([key, cfg]) => `
-                                <div class="dr-mood-opt ${this.moodData[this.editingMoodDate]?.type === key ? 'active' : ''}" data-type="${key}" onclick="document.querySelectorAll('.dr-mood-opt').forEach(o=>o.classList.remove('active')); this.classList.add('active')">
+                                <div class="dr-mood-opt ${this.moodData[this.editingMoodDate]?.type === key ? 'active' : ''}" 
+                                     data-type="${key}" 
+                                     onclick="document.querySelectorAll('.dr-mood-opt').forEach(o=>o.classList.remove('active')); this.classList.add('active')">
                                     <span class="material-icons" style="color:${cfg.color}">${cfg.icon}</span>
                                     <div style="font-size:10px; font-weight:700; margin-top:4px;">${cfg.label}</div>
                                 </div>
                             `).join('')}
                         </div>
                         <div class="dr-input-block">
-                            <label class="dr-label">Заметка</label>
-                            <textarea id="dr-mood-note-field" class="dr-input" rows="2" placeholder="Как прошел день?">${this.moodData[this.editingMoodDate]?.note || ''}</textarea>
+                            <label class="dr-label">Заметка (необязательно)</label>
+                            <textarea id="dr-mood-note-field" class="dr-input" rows="2" placeholder="Что на душе?">${this.moodData[this.editingMoodDate]?.note || ''}</textarea>
                         </div>
                         <button class="dr-save-btn" onclick="DiaryModule.saveMood()">Сохранить</button>
-                        ${this.moodData[this.editingMoodDate] ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700;" onclick="DiaryModule.deleteMood('${this.editingMoodDate}')">Удалить</div>` : ''}
+                        ${this.moodData[this.editingMoodDate] ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700; cursor:pointer;" onclick="DiaryModule.deleteMood('${this.editingMoodDate}')">Удалить</div>` : ''}
                     </div>
                 </div>
             ` : ''}
@@ -202,7 +213,7 @@ const DiaryModule = {
             ${this.editingNoteId ? `
                 <div class="dr-modal-bg" onclick="DiaryModule.editingNoteId=null; DiaryModule.render()">
                     <div class="dr-modal-content" onclick="event.stopPropagation()">
-                        <h3 style="text-align:center; margin-top:0;">Новая запись</h3>
+                        <h3 style="text-align:center; margin-top:0;">${this.editingNoteId === 'new' ? 'Новая запись' : 'Изменить запись'}</h3>
                         <div class="dr-input-block">
                             <label class="dr-label">Дата</label>
                             <input type="date" id="dr-note-date-field" class="dr-input" value="${this.editingNoteId === 'new' ? today : this.notesData.find(n => n.id == this.editingNoteId).date}">
@@ -212,7 +223,7 @@ const DiaryModule = {
                             <textarea id="dr-note-text-field" class="dr-input" rows="8" placeholder="Пиши здесь...">${this.editingNoteId === 'new' ? '' : this.notesData.find(n => n.id == this.editingNoteId).text}</textarea>
                         </div>
                         <button class="dr-save-btn" onclick="DiaryModule.saveNote()">Сохранить</button>
-                        ${this.editingNoteId !== 'new' ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700;" onclick="DiaryModule.deleteNote(${this.editingNoteId})">Удалить</div>` : ''}
+                        ${this.editingNoteId !== 'new' ? `<div style="text-align:center; color:#FF3B30; margin-top:15px; font-weight:700; cursor:pointer;" onclick="DiaryModule.deleteNote(${this.editingNoteId})">Удалить</div>` : ''}
                     </div>
                 </div>
             ` : ''}
@@ -220,17 +231,63 @@ const DiaryModule = {
     },
 
     renderStats: function() {
+        const counts = { super: 0, good: 0, norm: 0, bad: 0, awful: 0 };
+        const now = new Date();
+        
+        // Считаем статистику за текущий месяц
+        Object.entries(this.moodData).forEach(([date, data]) => {
+            const d = new Date(date);
+            if(d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                counts[data.type]++;
+            }
+        });
+
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
         return `
             <div class="dr-wrap">
-                <div style="display:flex; align-items:center; margin-bottom:20px;">
-                    <span class="material-icons-outlined" onclick="DiaryModule.currentView='main'; DiaryModule.render()">chevron_left</span>
+                <div style="display:flex; align-items:center; margin-bottom:20px;" onclick="DiaryModule.currentView='main'; DiaryModule.render()">
+                    <span class="material-icons-outlined">chevron_left</span>
                     <span style="font-weight:800; font-size:20px; margin-left:10px;">Статистика</span>
                 </div>
-                <div class="dr-card" style="text-align:center; padding:50px 20px;">
-                    тут будут графики...
+
+                <div class="dr-card">
+                    <div class="dr-card-title">Настроение за месяц</div>
+                    <div style="display:flex; justify-content:space-around; align-items:center; padding:10px 0;">
+                        ${Object.entries(this.moodConfig).map(([key, cfg]) => `
+                            <div style="text-align:center;">
+                                <span class="material-icons" style="color:${cfg.color}; font-size:30px;">${cfg.icon}</span>
+                                <div style="font-weight:800; font-size:14px;">${counts[key]}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="dr-card">
+                    <div class="dr-card-title">Год в точках (2026)</div>
+                    <div class="stats-grid">
+                        ${this.generateYearDots()}
+                    </div>
+                    <div style="margin-top:15px; font-size:11px; color:#999; display:flex; justify-content:space-between;">
+                        <span>Янв</span><span>Июнь</span><span>Дек</span>
+                    </div>
                 </div>
             </div>
         `;
+    },
+
+    generateYearDots: function() {
+        let html = '';
+        const year = 2026;
+        // Генерируем точки для первых 100 дней года для примера (или можно все 365)
+        for (let i = 0; i < 112; i++) {
+            const date = new Date(year, 0, i + 1);
+            const dateStr = date.toISOString().split('T')[0];
+            const mood = this.moodData[dateStr];
+            const color = mood ? this.moodConfig[mood.type].color : '#E5E5EA';
+            html += `<div class="stats-dot" style="background:${color}" onclick="DiaryModule.openMoodModal('${dateStr}')"></div>`;
+        }
+        return html;
     },
 
     changeMonth: function(dir) {
