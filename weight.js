@@ -43,44 +43,54 @@ const WeightApp = {
 
         const styles = `
             <style>
-                .wa-container { padding-bottom: 40px; animation: fadeIn 0.3s; font-family: sans-serif; max-width: 500px; margin: 0 auto; }
-                .wa-header { padding: 15px; color: #6c5ce7; font-weight: 700; cursor: pointer; }
-                
-                .wa-char-box { text-align: center; margin: 10px 0; height: 320px; display: flex; align-items: center; justify-content: center; }
-                .wa-char-img { height: 300px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15)); }
-                
-                .wa-calendar { background: #fff; border-radius: 25px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin: 0 15px 20px 15px; }
-                .wa-cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; text-transform: capitalize; }
-                .wa-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-                .wa-day { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; background: #f7f8fa; cursor: pointer; font-weight: 600; }
-                .wa-day.has-workout { background: #e3f9e5; color: #2ecc71; box-shadow: inset 0 0 0 1.5px #2ecc71; }
-                .wa-day.has-fastfood { background: #fff0f0; color: #e74c3c; box-shadow: inset 0 0 0 1.5px #e74c3c; }
-                .wa-day.has-both { background: #fff9e6; color: #f39c12; box-shadow: inset 0 0 0 1.5px #f39c12; }
-                
-                .wa-bottom-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px; }
-                .wa-btn { border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; }
-                .btn-measure { background: #6c5ce7; color: #fff; }
-                .btn-history { background: #f1f2f6; color: #2d3436; }
+    .wa-container { padding-bottom: 40px; animation: fadeIn 0.3s; font-family: sans-serif; max-width: 500px; margin: 0 auto; }
+    .wa-header { padding: 15px; color: #6c5ce7; font-weight: 700; cursor: pointer; }
+    
+    .wa-char-box { text-align: center; margin: 10px 0; height: 320px; display: flex; align-items: center; justify-content: center; }
+    .wa-char-img { height: 300px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15)); }
+    
+    .wa-calendar { background: #fff; border-radius: 25px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin: 0 15px 20px 15px; }
+    .wa-cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; text-transform: capitalize; }
+    .wa-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .wa-day { aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; background: #f7f8fa; cursor: pointer; font-weight: 600; }
+    .wa-day.has-workout { background: #e3f9e5; color: #2ecc71; box-shadow: inset 0 0 0 1.5px #2ecc71; }
+    .wa-day.has-fastfood { background: #fff0f0; color: #e74c3c; box-shadow: inset 0 0 0 1.5px #e74c3c; }
+    .wa-day.has-both { background: #fff9e6; color: #f39c12; box-shadow: inset 0 0 0 1.5px #f39c12; }
+    
+    .wa-bottom-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px; }
+    .wa-btn { border: none; padding: 18px; border-radius: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; }
+    .btn-measure { background: #6c5ce7; color: #fff; }
+    .btn-history { background: #f1f2f6; color: #2d3436; }
 
-                /* ИСПРАВЛЕННЫЙ ДИЗАЙН ФОРМЫ ЗАМЕРА */
-                .wa-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-                .wa-modal { background:#fff; padding:25px; border-radius:30px; width:90%; max-width:380px; box-sizing: border-box; overflow-y: auto; max-height: 90vh; }
-                
-                .wa-field { margin-bottom: 12px; width: 100%; box-sizing: border-box; }
-                .wa-label { font-size: 11px; font-weight: 800; color: #b2bec3; text-transform: uppercase; margin-bottom: 4px; display: block; margin-left: 4px; }
-                .wa-input { 
-                    width: 100%; padding: 12px 15px; box-sizing: border-box; 
-                    border: 2px solid #f1f2f6; border-radius: 14px; font-size: 16px; 
-                    background: #f9f9fb; outline: none; transition: 0.2s;
-                    font-family: inherit;
-                }
-                .wa-input:focus { border-color: #6c5ce7; background: #fff; }
-                
-                .wa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; box-sizing: border-box; }
-                .wa-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
-                
-                .wa-choice-btn { width:100%; padding:16px; margin:8px 0; border-radius:18px; border:none; font-weight:700; cursor:pointer; font-size: 16px; }
-            </style>
+    /* ИСПРАВЛЕННЫЙ ДИЗАЙН ФОРМЫ ЗАМЕРА */
+    .wa-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
+    .wa-modal { background:#fff; padding:25px; border-radius:30px; width:90%; max-width:380px; box-sizing: border-box; overflow-y: auto; max-height: 90vh; }
+    
+    .wa-field { margin-bottom: 12px; width: 100%; box-sizing: border-box; }
+    .wa-label { font-size: 11px; font-weight: 800; color: #b2bec3; text-transform: uppercase; margin-bottom: 4px; display: block; margin-left: 4px; }
+    
+    /* ТУТ ИСПРАВЛЕНИЕ: добавлена ширина и бокс-сайзинг */
+    .wa-input { 
+        width: 100%; 
+        max-width: 100%; /* Чтобы не распирало */
+        padding: 12px 10px; 
+        box-sizing: border-box; 
+        border: 2px solid #f1f2f6; 
+        border-radius: 14px; 
+        font-size: 15px; 
+        background: #f9f9fb; 
+        outline: none; 
+        transition: 0.2s;
+        font-family: inherit;
+        display: block; /* Убирает лишние отступы */
+    }
+    .wa-input:focus { border-color: #6c5ce7; background: #fff; }
+    
+    .wa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; box-sizing: border-box; }
+    .wa-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
+    
+    .wa-choice-btn { width:100%; padding:16px; margin:8px 0; border-radius:18px; border:none; font-weight:700; cursor:pointer; font-size: 16px; }
+</style>
         `;
 
         app.innerHTML = `
