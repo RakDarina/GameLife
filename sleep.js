@@ -10,8 +10,10 @@ const SleepPage = {
         currentOffset: 0  // 0 - текущий период, 1 - прошлый, 2 - позапрошлый и т.д.
     },
 
-    init: function() {
+  init: function() {
         this.loadData();
+        // Принудительно ставим вид 'main' при каждом новом открытии модуля
+        this.state.view = 'main'; 
         this.render();
     },
 
