@@ -60,32 +60,42 @@ const EmotionDiary = {
         
         const styles = `
             <style>
-                .em-container { animation: fadeIn 0.3s; padding-bottom: 100px; box-sizing: border-box; } /* ИСПРАВЛЕНИЕ */
+                .em-container { 
+                    animation: fadeIn 0.3s; 
+                    padding-bottom: 100px; 
+                    box-sizing: border-box;
+                    width: 100%;
+                    overflow-x: hidden; /* Запрещаем горизонтальный скролл */
+                } 
                 .em-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
                 .em-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
-                .em-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; }
+                .em-title { font-size: 22px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; }
 
                 /* Карточка записи */
                 .em-card { 
-                    background: white; border-radius: 25px; padding: 20px; 
-                    margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+                    background: white; border-radius: 20px; 
+                    padding: 15px; /* Уменьшил отступы */
+                    margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
                     position: relative;
-                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ */
+                    box-sizing: border-box;
+                    width: 100%;
+                    word-wrap: break-word; /* Чтобы длинный текст не распирал форму */
                 }
-                .em-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-                .em-card-date { color: #5856D6; font-weight: 700; font-size: 17px; }
+                .em-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+                .em-card-date { color: #5856D6; font-weight: 700; font-size: 15px; }
                 .em-card-actions { display: flex; gap: 15px; color: #8E8E93; }
                 
-                .em-field-label { font-weight: 800; display: block; margin-top: 10px; font-size: 15px; }
-                .em-field-text { font-size: 15px; margin-bottom: 10px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; }
-                .em-alt-text { color: #34C759; }
+                .em-field-label { font-weight: 800; display: block; margin-top: 8px; font-size: 13px; color: #8E8E93; }
+                .em-field-text { font-size: 14px; margin-bottom: 8px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; }
+                .em-alt-text { color: #34C759 !important; }
 
                 /* Кнопка Добавить (пунктир) */
                 .em-add-placeholder {
-                    border: 2px dashed #C7C7CC; border-radius: 25px; padding: 30px;
+                    border: 2px dashed #C7C7CC; border-radius: 20px; padding: 20px;
                     display: flex; flex-direction: column; align-items: center; gap: 10px;
                     color: #8E8E93; cursor: pointer; transition: 0.2s;
-                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ */
+                    box-sizing: border-box;
+                    width: 100%;
                 }
                 .em-add-placeholder:active { background: #E5E5EA; }
 
@@ -96,21 +106,21 @@ const EmotionDiary = {
                 }
                 .em-modal-content {
                     background: white; width: 100%; max-height: 90vh; 
-                    border-radius: 30px 30px 0 0; padding: 25px; overflow-y: auto;
+                    border-radius: 30px 30px 0 0; padding: 20px; overflow-y: auto;
                     animation: slideUp 0.3s ease-out;
                     box-sizing: border-box;
                 }
-                .em-form-group { margin-bottom: 20px; }
-                .em-form-label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
+                .em-form-group { margin-bottom: 15px; }
+                .em-form-label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 15px; }
                 .em-input, .em-textarea {
                     width: 100%; border: 1px solid #E5E5EA; border-radius: 12px;
-                    padding: 12px; font-size: 16px; font-family: inherit; outline: none;
+                    padding: 10px; font-size: 15px; font-family: inherit; outline: none;
                     box-sizing: border-box;
                 }
-                .em-textarea { min-height: 80px; resize: none; }
-                .em-modal-btns { display: flex; gap: 15px; margin-top: 20px; }
-                .em-btn-save { background: #5856D6; color: white; border: none; flex: 2; padding: 15px; border-radius: 15px; font-weight: 600; }
-                .em-btn-cancel { background: #F2F2F7; color: #007AFF; border: none; flex: 1; padding: 15px; border-radius: 15px; font-weight: 600; }
+                .em-textarea { min-height: 70px; resize: none; }
+                .em-modal-btns { display: flex; gap: 12px; margin-top: 15px; }
+                .em-btn-save { background: #5856D6; color: white; border: none; flex: 2; padding: 14px; border-radius: 14px; font-weight: 600; }
+                .em-btn-cancel { background: #F2F2F7; color: #007AFF; border: none; flex: 1; padding: 14px; border-radius: 14px; font-weight: 600; }
 
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
             </style>
@@ -141,7 +151,7 @@ const EmotionDiary = {
         const modalHTML = this.editingId ? `
             <div class="em-modal">
                 <div class="em-modal-content">
-                    <h2 style="margin-top:0">${this.editingId === 'new' ? 'Новая запись СМЭР' : 'Редактировать СМЭР'}</h2>
+                    <h2 style="margin-top:0; font-size: 20px;">${this.editingId === 'new' ? 'Новая запись' : 'Изменить'}</h2>
                     <form id="em-form">
                         <div class="em-form-group">
                             <label class="em-form-label">Дата:</label>
@@ -187,7 +197,7 @@ const EmotionDiary = {
                 ${recordsHTML}
 
                 <div class="em-add-placeholder" onclick="EmotionDiary.addRecord()">
-                    <span class="material-icons-outlined" style="font-size: 40px">add</span>
+                    <span class="material-icons-outlined" style="font-size: 32px">add</span>
                     <span>Добавить запись</span>
                 </div>
             </div>
