@@ -62,11 +62,17 @@ const EmotionDiary = {
             <style>
                 .em-container { 
                     animation: fadeIn 0.3s; 
-                    padding-bottom: 100px; 
-                    width: 100%;
+                    /* Эти две строки ниже — магия, которая нейтрализует паддинги из index.html */
+                    margin-left: -20px; 
+                    margin-right: -20px;
+                    
+                    padding: 0 20px 100px;
+                    width: calc(100% + 40px); /* Расширяем обратно до краев экрана */
                     overflow-x: hidden;
                     box-sizing: border-box;
+                    touch-action: pan-y; /* Запрет горизонтального сдвига */
                 }
+                
                 .em-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
                 .em-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
                 .em-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; }
@@ -74,52 +80,35 @@ const EmotionDiary = {
                 .em-card { 
                     background: white; border-radius: 25px; padding: 20px; 
                     margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-                    position: relative;
                     box-sizing: border-box;
                     width: 100%;
                 }
-                .em-field-text { font-size: 15px; margin-bottom: 10px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; word-break: break-word; }
                 
+                .em-field-text { font-size: 15px; margin-bottom: 10px; white-space: pre-wrap; color: #3A3A3C; line-height: 1.4; word-break: break-word; }
+
                 .em-add-placeholder {
                     border: 2px dashed #C7C7CC; border-radius: 25px; padding: 30px;
                     display: flex; flex-direction: column; align-items: center; gap: 10px;
                     color: #8E8E93; cursor: pointer; box-sizing: border-box; width: 100%;
                 }
 
-                /* МОДАЛЬНОЕ ОКНО - ИСПРАВЛЕННОЕ */
+                /* ФИКСИРОВАННАЯ МОДАЛКА */
                 .em-modal {
-                    position: fixed; 
-                    top: 0; 
-                    left: 0; 
-                    width: 100vw; /* Строго по ширине экрана */
-                    height: 100vh;
-                    background: rgba(0,0,0,0.4); 
-                    z-index: 9999; 
-                    display: flex; 
-                    align-items: flex-end;
-                    overflow: hidden; /* Запрет скролла основной страницы */
-                    touch-action: none; /* Запрет любых свайпов на подложке */
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.4); z-index: 2000; display: flex; align-items: flex-end;
+                    touch-action: none;
                 }
-
                 .em-modal-content {
-                    background: white; 
-                    width: 100%; 
-                    max-height: 92vh; 
-                    border-radius: 30px 30px 0 0; 
-                    padding: 25px 20px; 
-                    overflow-y: auto;
+                    background: white; width: 100%; max-height: 90vh; 
+                    border-radius: 30px 30px 0 0; padding: 25px; overflow-y: auto;
                     box-sizing: border-box;
                     animation: slideUp 0.3s ease-out;
-                    touch-action: pan-y; /* РАЗРЕШЕН ТОЛЬКО ВЕРТИКАЛЬНЫЙ СКРОЛЛ */
-                    overscroll-behavior: contain; /* Прокрутка не уходит на фон */
+                    touch-action: pan-y;
                 }
-
-                .em-form-group { margin-bottom: 20px; width: 100%; }
-                .em-form-label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
                 .em-input, .em-textarea {
                     width: 100%; border: 1px solid #E5E5EA; border-radius: 12px;
                     padding: 12px; font-size: 16px; font-family: inherit; outline: none;
-                    box-sizing: border-box; /* Чтобы инпуты не вылезали вправо */
+                    box-sizing: border-box;
                 }
                 .em-textarea { min-height: 80px; resize: none; }
                 .em-modal-btns { display: flex; gap: 15px; margin-top: 20px; }
@@ -127,6 +116,7 @@ const EmotionDiary = {
                 .em-btn-cancel { background: #F2F2F7; color: #007AFF; border: none; flex: 1; padding: 15px; border-radius: 15px; font-weight: 600; }
 
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
 
@@ -152,13 +142,13 @@ const EmotionDiary = {
                 <div class="em-modal-content" onclick="event.stopPropagation()">
                     <h2 style="margin-top:0">${this.editingId === 'new' ? 'Новая запись' : 'Редактировать'}</h2>
                     <form id="em-form">
-                        <div class="em-form-group"><label class="em-form-label">Дата:</label>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Дата:</label>
                         <input type="date" name="em_date" class="em-input" value="${this.editingId === 'new' ? new Date().toISOString().split('T')[0] : this.records.find(r => r.id === this.editingId).date}"></div>
-                        <div class="em-form-group"><label class="em-form-label">1. Ситуация:</label><textarea name="em_sit" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).situation}</textarea></div>
-                        <div class="em-form-group"><label class="em-form-label">2. Эмоции:</label><textarea name="em_emo" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).emotions}</textarea></div>
-                        <div class="em-form-group"><label class="em-form-label">3. Мысли:</label><textarea name="em_thou" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).thoughts}</textarea></div>
-                        <div class="em-form-group"><label class="em-form-label">4. Поведение:</label><textarea name="em_beh" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).behavior}</textarea></div>
-                        <div class="em-form-group"><label class="em-form-label">5. Альтернатива:</label><textarea name="em_alt" class="em-textarea" style="color: #34C759">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).alternative}</textarea></div>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Ситуация:</label><textarea name="em_sit" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).situation}</textarea></div>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Эмоции:</label><textarea name="em_emo" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).emotions}</textarea></div>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Мысли:</label><textarea name="em_thou" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).thoughts}</textarea></div>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Поведение:</label><textarea name="em_beh" class="em-textarea">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).behavior}</textarea></div>
+                        <div style="margin-bottom: 20px;"><label style="display:block; font-weight:700; margin-bottom:8px;">Альтернатива:</label><textarea name="em_alt" class="em-textarea" style="color: #34C759">${this.editingId === 'new' ? '' : this.records.find(r => r.id === this.editingId).alternative}</textarea></div>
                         <div class="em-modal-btns">
                             <button type="button" class="em-btn-cancel" onclick="EmotionDiary.editingId = null; EmotionDiary.render()">Отмена</button>
                             <button type="button" class="em-btn-save" onclick="EmotionDiary.submitForm()">Сохранить</button>
