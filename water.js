@@ -16,6 +16,7 @@ const WaterPage = {
     init: function() {
         this.loadData();
         this.checkNewDay();
+        this.state.view = 'main'; // ПРИНУДИТЕЛЬНО ставим главный экран (стакан)
         this.render();
     },
 
