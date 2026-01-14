@@ -11,18 +11,22 @@ const AchievementsModule = {
         this.data = JSON.parse(localStorage.getItem(this.config.storageKey)) || [];
         this.render();
     },
+
     save: function() {
         localStorage.setItem(this.config.storageKey, JSON.stringify(this.data));
         this.render();
     },
+
     openModal: function(id = null) {
         this.editingId = id;
         this.render();
     },
+
     addItem: function() {
         const text = document.getElementById('list-input-field').value;
         const date = document.getElementById('list-date-field').value;
         if (!text.trim()) return;
+
         if (this.editingId === 'new') {
             this.data.push({ id: Date.now(), text: text, date: date });
         } else {
@@ -32,6 +36,7 @@ const AchievementsModule = {
         this.editingId = null;
         this.save();
     },
+
     deleteItem: function(id) {
         this.editingId = null;
         this.render();
@@ -42,6 +47,7 @@ const AchievementsModule = {
             }
         }, 50);
     },
+
     render: function() {
         const app = document.getElementById('app-viewport');
         const styles = `
@@ -58,13 +64,14 @@ const AchievementsModule = {
                 .ls-modal { background: #F2F2F7; width: 100%; border-radius: 30px 30px 0 0; padding: 25px; box-sizing: border-box; animation: slideUp 0.3s; }
                 .ls-input-group { background: white; border-radius: 18px; padding: 15px; margin-bottom: 15px; }
                 .ls-label { font-size: 11px; color: #8E8E93; font-weight: 800; margin-bottom: 5px; display: block; }
-                .ls-textarea { width: 100%; border: none; outline: none; font-family: inherit; font-size: 17px; resize: none; min-height: 120px; }
+                .ls-textarea { width: 100%; border: none; outline: none; font-family: inherit; font-size: 17px; resize: none; min-height: 120px; background: transparent; }
                 .ls-input-date { width: 100%; border: none; outline: none; font-family: inherit; font-size: 16px; background: transparent; }
                 .ls-save { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 700; font-size: 17px; }
                 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
+
         let listHtml = this.data.map((item, index) => `
             <div class="ls-item" onclick="AchievementsModule.openModal(${item.id})">
                 <div class="ls-number">${index + 1}.</div>
@@ -74,29 +81,31 @@ const AchievementsModule = {
                 </div>
             </div>
         `).join('');
+
         app.innerHTML = styles + `
             <div class="ls-wrap">
                 <div class="ls-header">${this.config.title}</div>
                 <div class="ls-add-btn" onclick="AchievementsModule.openModal('new')">+ Добавить достижение</div>
-                <div class="ls-list">${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Вы еще не записали успехов...</div>'}</div>
+                <div class="ls-list">${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет...</div>'}</div>
             </div>
             ${this.editingId ? this.renderModal() : ''}
         `;
         if(this.editingId) this.initAutoResize();
     },
+
     renderModal: function() {
         const item = this.editingId === 'new' ? null : this.data.find(i => i.id == this.editingId);
         const today = new Date().toISOString().split('T')[0];
         return `
             <div class="ls-modal-bg" onclick="AchievementsModule.editingId=null; AchievementsModule.render()">
                 <div class="ls-modal" onclick="event.stopPropagation()">
-                    <h3 style="text-align:center; margin-top:0;">${item ? 'Правка' : 'Новое достижение'}</h3>
+                    <h3 style="text-align:center; margin-top:0;">Достижение</h3>
                     <div class="ls-input-group">
                         <label class="ls-label">ДАТА</label>
                         <input type="date" id="list-date-field" class="ls-input-date" value="${item ? item.date : today}">
                     </div>
                     <div class="ls-input-group">
-                        <label class="ls-label">ОПИСАНИЕ УСПЕХА</label>
+                        <label class="ls-label">ЧТО СДЕЛАНО</label>
                         <textarea id="list-input-field" class="ls-textarea" placeholder="${this.config.placeholder}">${item ? item.text : ''}</textarea>
                     </div>
                     <button class="ls-save" onclick="AchievementsModule.addItem()">Сохранить</button>
@@ -105,6 +114,7 @@ const AchievementsModule = {
             </div>
         `;
     },
+
     initAutoResize: function() {
         const tx = document.getElementById('list-input-field');
         if(!tx) return;
@@ -112,4 +122,6 @@ const AchievementsModule = {
         tx.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; });
     }
 };
+
+window.AchievementsModule = AchievementsModule;
 export function render() { AchievementsModule.init(); }
