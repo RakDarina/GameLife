@@ -1,9 +1,8 @@
 /* ==========================================
-   МОДУЛЬ: ТРЕКЕР КОЖИ (skin.js)
+   МОДУЛЬ: ДНЕВНИК КОЖИ (skin.js)
    ========================================== */
 
 const SkinTracker = {
-    // Уникальное хранилище
     data: JSON.parse(localStorage.getItem('GL_Skin_Data_v1')) || [],
     editingId: null,
     selectedHistoryDate: new Date().toISOString().split('T')[0],
@@ -32,20 +31,17 @@ const SkinTracker = {
 
     submitForm: function() {
         const form = document.getElementById('sk-form');
-        
-        // Собираем активные теги
-        const location = document.querySelector('.sk-tag.active[data-type="loc"]')?.dataset.value || 'Не указано';
-        const trigger = document.querySelector('.sk-tag.active[data-type="trig"]')?.dataset.value || 'Нет';
+        const damageVal = document.querySelector('.sk-num.active')?.dataset.value || 0;
 
         const record = {
             id: this.editingId === 'new' ? Date.now() : this.editingId,
             date: form.sk_date.value,
             time: form.sk_time.value,
-            location: location,
-            trigger: trigger,
+            place: form.sk_place.value,
             feeling_before: form.sk_before.value,
             feeling_after: form.sk_after.value,
-            success: form.sk_success.checked // Удалось ли остановиться
+            damage: damageVal,
+            switch: form.sk_switch.value
         };
 
         if (this.editingId === 'new') {
@@ -59,9 +55,15 @@ const SkinTracker = {
         this.save();
     },
 
-    toggleTag: function(el, type) {
-        document.querySelectorAll(`.sk-tag[data-type="${type}"]`).forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
+    // Функция быстрой вставки текста из тегов
+    addText: function(fieldId, text) {
+        const field = document.getElementsByName(fieldId)[0];
+        if (field) {
+            const currentVal = field.value.trim();
+            field.value = currentVal ? currentVal + ', ' + text : text;
+            field.style.height = 'auto';
+            field.style.height = (field.scrollHeight) + 'px';
+        }
     },
 
     render: function() {
@@ -83,59 +85,36 @@ const SkinTracker = {
                     box-sizing: border-box;
                     touch-action: pan-y;
                 }
-                
                 .sk-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
                 .sk-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
                 .sk-title { font-size: 22px; font-weight: 800; }
                 .sk-history-btn { color: #5856D6; font-weight: 700; cursor: pointer; font-size: 14px; }
 
-                .sk-card { 
-                    background: white; border-radius: 25px; padding: 20px; 
-                    margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-                    box-sizing: border-box; width: 100%;
-                    position: relative;
-                }
+                .sk-card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); width: 100%; box-sizing: border-box; }
                 .sk-card-meta { color: #8E8E93; font-size: 13px; margin-bottom: 10px; display: flex; justify-content: space-between; }
                 
-                .sk-card-title { font-size: 17px; font-weight: 700; color: #1C1C1E; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-                .sk-success-badge { background: #E8F5E9; color: #2E7D32; font-size: 11px; padding: 4px 8px; border-radius: 8px; }
-
-                .sk-info-label { font-size: 12px; color: #8E8E93; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
-                .sk-info-val { font-size: 15px; color: #3A3A3C; margin-bottom: 8px; white-space: pre-wrap; line-height: 1.4; }
+                .sk-damage-badge { background: #F2F2F7; padding: 4px 10px; border-radius: 10px; color: #FF3B30; font-weight: 700; font-size: 12px; }
+                .sk-label-sm { font-size: 12px; color: #8E8E93; font-weight: 700; margin-top: 10px; text-transform: uppercase; }
+                .sk-val { font-size: 15px; color: #1C1C1E; margin-bottom: 5px; white-space: pre-wrap; line-height: 1.4; }
 
                 /* МОДАЛКА */
-                .sk-modal {
-                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                    background: rgba(0,0,0,0.5); z-index: 3000;
-                    display: flex; align-items: flex-end;
-                }
-                .fd-modal-content { /* Используем похожий стиль анимации */
-                    background: #F8F9FB; width: 100%; max-height: 95vh;
-                    border-radius: 30px 30px 0 0; padding: 25px 20px;
-                    box-sizing: border-box; overflow-y: auto;
-                    animation: skSlide 0.3s ease-out;
-                }
+                .sk-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3000; display: flex; align-items: flex-end; }
+                .sk-modal-content { background: #F8F9FB; width: 100%; max-height: 95vh; border-radius: 30px 30px 0 0; padding: 25px 20px; box-sizing: border-box; overflow-y: auto; animation: skSlide 0.3s ease-out; }
 
                 .sk-group { background: white; border-radius: 20px; padding: 15px; margin-bottom: 12px; }
                 .sk-label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 10px; color: #5856D6; }
                 
-                /* ТЕГИ */
-                .sk-tags-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
-                .sk-tag { 
-                    background: #F2F2F7; padding: 8px 16px; border-radius: 12px; 
-                    font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s;
-                }
-                .sk-tag.active { background: #5856D6; color: white; }
+                .sk-hint-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+                .sk-hint-btn { background: #F2F2F7; padding: 6px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #3A3A3C; cursor: pointer; }
 
-                .sk-input { width: 100%; border: none; background: transparent; font-size: 16px; outline: none; font-family: inherit; padding: 0; color: #1C1C1E; resize: none; }
-                
-                .sk-checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-                .sk-checkbox { width: 22px; height: 22px; accent-color: #34C759; }
+                .sk-num-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+                .sk-num { background: #F2F2F7; padding: 10px 0; border-radius: 10px; text-align: center; font-weight: 700; cursor: pointer; }
+                .sk-num.active { background: #FF3B30; color: white; }
 
-                .sk-btn-save { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 20px; font-weight: 700; font-size: 16px; margin-top: 10px; }
+                .sk-input { width: 100%; border: none; background: transparent; font-size: 16px; outline: none; font-family: inherit; padding: 0; resize: none; }
+                .sk-save-btn { background: #5856D6; color: white; border: none; width: 100%; padding: 18px; border-radius: 20px; font-weight: 700; font-size: 16px; margin-top: 10px; }
 
                 @keyframes skSlide { from { transform: translateY(100%); } to { transform: translateY(0); } }
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
 
@@ -143,18 +122,16 @@ const SkinTracker = {
             <div class="sk-card">
                 <div class="sk-card-meta">
                     <span>${r.time}</span>
-                    <div style="display:flex; gap:15px;">
-                        <span class="material-icons-outlined" style="font-size:18px;" onclick="SkinTracker.editingId='${r.id}'; SkinTracker.render()">edit</span>
-                        <span class="material-icons-outlined" style="font-size:18px; color:#FF3B30" onclick="SkinTracker.deleteRecord(${r.id})">delete</span>
-                    </div>
+                    <span class="sk-damage-badge">Урон: ${r.damage}/10</span>
                 </div>
-                <div class="sk-card-title">
-                    ${r.location} 
-                    ${r.success ? '<span class="sk-success-badge">Справилась! ✨</span>' : ''}
+                <div style="font-weight:700; font-size:17px; margin-bottom:10px;">${r.place}</div>
+                <div class="sk-label-sm">До:</div><div class="sk-val">${r.feeling_before}</div>
+                <div class="sk-label-sm">После:</div><div class="sk-val">${r.feeling_after}</div>
+                <div class="sk-label-sm">Переключилась на:</div><div class="sk-val" style="color:#34C759">${r.switch}</div>
+                <div style="margin-top:15px; display:flex; gap:20px; border-top:1px solid #F2F2F7; padding-top:10px;">
+                     <span class="material-icons-outlined" style="font-size:18px; color:#8E8E93" onclick="SkinTracker.editingId='${r.id}'; SkinTracker.render()">edit</span>
+                     <span class="material-icons-outlined" style="font-size:18px; color:#FF3B30" onclick="SkinTracker.deleteRecord(${r.id})">delete</span>
                 </div>
-                <div class="sk-info-label">Триггер:</div><div class="sk-info-val">${r.trigger}</div>
-                <div class="sk-info-label">До (чувства):</div><div class="sk-info-val">${r.feeling_before}</div>
-                <div class="sk-info-label">После (чувства):</div><div class="sk-info-val">${r.feeling_after}</div>
             </div>
         `).join('');
 
@@ -162,8 +139,8 @@ const SkinTracker = {
         
         const modalHTML = this.editingId ? `
             <div class="sk-modal" onclick="SkinTracker.editingId=null; SkinTracker.render()">
-                <div class="fd-modal-content" onclick="event.stopPropagation()">
-                    <h2 style="margin:0 0 20px; text-align:center">${currentEdit ? 'Изменить запись' : 'Дневник кожи'}</h2>
+                <div class="sk-modal-content" onclick="event.stopPropagation()">
+                    <h2 style="margin:0 0 20px; text-align:center">${currentEdit ? 'Изменить' : 'Дневник кожи'}</h2>
                     <form id="sk-form">
                         <div style="display:flex; gap:10px;">
                             <div class="sk-group" style="flex:1"><label class="sk-label">Дата</label>
@@ -173,26 +150,26 @@ const SkinTracker = {
                         </div>
 
                         <div class="sk-group">
-                            <label class="sk-label">Где это произошло?</label>
-                            <div class="sk-tags-row">
-                                ${['Лицо', 'Плечи', 'Руки', 'Спина', 'Ванная', 'Зеркало'].map(loc => `
-                                    <div class="sk-tag ${currentEdit?.location === loc ? 'active' : ''}" data-type="loc" data-value="${loc}" onclick="SkinTracker.toggleTag(this, 'loc')">${loc}</div>
-                                `).join('')}
+                            <label class="sk-label">Занятие и место</label>
+                            <div class="sk-hint-row">
+                                ${['Лицо', 'Руки', 'Ноги', 'Ногти', 'Ванная', 'Зеркало'].map(t => `<div class="sk-hint-btn" onclick="SkinTracker.addText('sk_place', '${t}')">${t}</div>`).join('')}
                             </div>
-                        </div>
-
-                        <div class="sk-group">
-                            <label class="sk-label">Что послужило триггером?</label>
-                            <div class="sk-tags-row">
-                                ${['Скука', 'Тревога', 'Стресс', 'Неровность', 'Злость', 'Усталость'].map(trig => `
-                                    <div class="sk-tag ${currentEdit?.trigger === trig ? 'active' : ''}" data-type="trig" data-value="${trig}" onclick="SkinTracker.toggleTag(this, 'trig')">${trig}</div>
-                                `).join('')}
-                            </div>
+                            <textarea name="sk_place" class="sk-input" rows="1" placeholder="Где и что делали?">${currentEdit ? currentEdit.place : ''}</textarea>
                         </div>
 
                         <div class="sk-group">
                             <label class="sk-label">Мысли и чувства ДО</label>
-                            <textarea name="sk_before" class="sk-input" rows="2" placeholder="О чем думали?">${currentEdit ? currentEdit.feeling_before : ''}</textarea>
+                            <div class="sk-hint-row">
+                                ${['Скука', 'Тревога', 'Стресс', 'Неровность'].map(t => `<div class="sk-hint-btn" onclick="SkinTracker.addText('sk_before', '${t}')">${t}</div>`).join('')}
+                            </div>
+                            <textarea name="sk_before" class="sk-input" rows="2" placeholder="О чем думали до?">${currentEdit ? currentEdit.feeling_before : ''}</textarea>
+                        </div>
+
+                        <div class="sk-group">
+                            <label class="sk-label">Повреждение (0-10)</label>
+                            <div class="sk-num-grid">
+                                ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<div class="sk-num ${ (currentEdit?.damage || 0) == n ? 'active' : ''}" data-value="${n}" onclick="document.querySelectorAll('.sk-num').forEach(x=>x.classList.remove('active')); this.classList.add('active')">${n}</div>`).join('')}
+                            </div>
                         </div>
 
                         <div class="sk-group">
@@ -201,13 +178,11 @@ const SkinTracker = {
                         </div>
 
                         <div class="sk-group">
-                            <label class="sk-checkbox-group">
-                                <input type="checkbox" name="sk_success" class="sk-checkbox" ${currentEdit?.success ? 'checked' : ''}>
-                                <span style="font-weight:700; font-size:15px; color:#2E7D32">Удалось вовремя остановиться?</span>
-                            </label>
+                            <label class="sk-label">На что переключилась?</label>
+                            <textarea name="sk_switch" class="sk-input" rows="1" placeholder="Что помогло остановиться?">${currentEdit ? currentEdit.switch : ''}</textarea>
                         </div>
 
-                        <button type="button" class="sk-btn-save" onclick="SkinTracker.submitForm()">Сохранить запись</button>
+                        <button type="button" class="sk-save-btn" onclick="SkinTracker.submitForm()">Сохранить</button>
                     </form>
                 </div>
             </div>
@@ -225,27 +200,23 @@ const SkinTracker = {
                 </div>
 
                 ${this.viewMode === 'history' ? `
-                    <div class="sk-history-nav" style="background:white; border-radius:20px; padding:15px; margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-                        <span class="material-icons-outlined" style="color:#8E8E93">calendar_month</span>
+                    <div class="sk-group" style="padding:10px 15px; display:flex; align-items:center; gap:10px;">
                         <input type="date" style="border:none; font-family:inherit; font-size:16px; font-weight:700; flex:1; outline:none;" 
-                            value="${this.selectedHistoryDate}" 
-                            onchange="SkinTracker.selectedHistoryDate = this.value; SkinTracker.render()">
+                            value="${this.selectedHistoryDate}" onchange="SkinTracker.selectedHistoryDate = this.value; SkinTracker.render()">
                     </div>
                 ` : ''}
 
-                ${recordsHTML || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет. Береги себя! 🤍</div>'}
+                ${recordsHTML || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей нет. Ты молодец!</div>'}
 
                 <div style="position:fixed; bottom:110px; left:20px; right:20px;">
                     <button style="width:100%; background:#5856D6; color:white; border:none; padding:18px; border-radius:20px; font-weight:700; box-shadow: 0 10px 25px rgba(88, 86, 214, 0.3);" 
-                        onclick="SkinTracker.addRecord()">
-                        + Сделать запись
-                    </button>
+                        onclick="SkinTracker.addRecord()">+ Добавить запись</button>
                 </div>
             </div>
             ${modalHTML}
         `;
 
-        // Авто-высота для всех textarea
+        // Авто-высота полей
         document.querySelectorAll('textarea.sk-input').forEach(el => {
             el.style.height = 'auto';
             el.style.height = (el.scrollHeight) + 'px';
