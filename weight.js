@@ -62,35 +62,43 @@ const WeightApp = {
     .btn-measure { background: #6c5ce7; color: #fff; }
     .btn-history { background: #f1f2f6; color: #2d3436; }
 
-    /* ИСПРАВЛЕННЫЙ ДИЗАЙН ФОРМЫ ЗАМЕРА */
     .wa-modal-bg { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(4px); }
-    .wa-modal { background:#fff; padding:25px; border-radius:30px; width:90%; max-width:380px; box-sizing: border-box; overflow-y: auto; max-height: 90vh; }
+    .wa-modal { background:#fff; padding:20px; border-radius:30px; width:92%; max-width:360px; box-sizing: border-box; overflow-y: auto; max-height: 90vh; }
     
     .wa-field { margin-bottom: 12px; width: 100%; box-sizing: border-box; }
     .wa-label { font-size: 11px; font-weight: 800; color: #b2bec3; text-transform: uppercase; margin-bottom: 4px; display: block; margin-left: 4px; }
     
-    /* ТУТ ИСПРАВЛЕНИЕ: добавлена ширина и бокс-сайзинг */
+    /* УЛУЧШЕННЫЕ ИНПУТЫ */
     .wa-input { 
         width: 100%; 
-        max-width: 100%; /* Чтобы не распирало */
-        padding: 12px 10px; 
+        min-width: 0; /* Важно: позволяет сжиматься меньше дефолта */
+        padding: 12px 8px; /* Уменьшили боковые отступы */
         box-sizing: border-box; 
         border: 2px solid #f1f2f6; 
         border-radius: 14px; 
-        font-size: 15px; 
+        font-size: 14px; /* Чуть меньше шрифт */
         background: #f9f9fb; 
         outline: none; 
         transition: 0.2s;
         font-family: inherit;
-        display: block; /* Убирает лишние отступы */
+        -webkit-appearance: none; /* Убирает лишние стили iOS */
     }
+    
+    /* Исправление для поля даты, чтобы не ломало сетку */
+    input[type="date"].wa-input {
+        min-height: 45px;
+        display: inline-flex;
+        align-items: center;
+    }
+
     .wa-input:focus { border-color: #6c5ce7; background: #fff; }
     
-    .wa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; box-sizing: border-box; }
-    .wa-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; box-sizing: border-box; }
+    .wa-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; box-sizing: border-box; }
+    .wa-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; width: 100%; box-sizing: border-box; }
     
     .wa-choice-btn { width:100%; padding:16px; margin:8px 0; border-radius:18px; border:none; font-weight:700; cursor:pointer; font-size: 16px; }
 </style>
+
         `;
 
         app.innerHTML = `
