@@ -60,7 +60,7 @@ const EmotionDiary = {
         
         const styles = `
             <style>
-                .em-container { animation: fadeIn 0.3s; padding-bottom: 100px; }
+                .em-container { animation: fadeIn 0.3s; padding-bottom: 100px; box-sizing: border-box; } /* ИСПРАВЛЕНИЕ */
                 .em-header { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
                 .em-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
                 .em-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; }
@@ -70,7 +70,7 @@ const EmotionDiary = {
                     background: white; border-radius: 25px; padding: 20px; 
                     margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
                     position: relative;
-                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ: чтобы рамка не вылазила */
+                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ */
                 }
                 .em-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
                 .em-card-date { color: #5856D6; font-weight: 700; font-size: 17px; }
@@ -85,7 +85,7 @@ const EmotionDiary = {
                     border: 2px dashed #C7C7CC; border-radius: 25px; padding: 30px;
                     display: flex; flex-direction: column; align-items: center; gap: 10px;
                     color: #8E8E93; cursor: pointer; transition: 0.2s;
-                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ: чтобы рамка не вылазила */
+                    box-sizing: border-box; /* ИСПРАВЛЕНИЕ */
                 }
                 .em-add-placeholder:active { background: #E5E5EA; }
 
