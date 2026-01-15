@@ -82,14 +82,22 @@ const AchievementsModule = {
             </div>
         `).join('');
 
-        app.innerHTML = styles + `
-            <div class="ls-wrap">
-                <div class="ls-header">${this.config.title}</div>
-                <div class="ls-add-btn" onclick="AchievementsModule.openModal('new')">+ Добавить достижение</div>
-                <div class="ls-list">${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет...</div>'}</div>
-            </div>
-            ${this.editingId ? this.renderModal() : ''}
-        `;
+        // Находим место, где начинается формирование app.innerHTML
+app.innerHTML = styles + `
+    <div class="ls-wrap">
+        <div style="display: flex; align-items: center; margin-bottom: 20px; cursor: pointer; color: #5856D6; font-weight: 600;" 
+             onclick="showMentalHealth()">
+            <span style="margin-right: 5px;">❮</span> Назад
+        </div>
+
+        <div class="ls-header">${this.config.title}</div>
+        <div class="ls-add-btn" onclick="${this.config.storageKey.includes('Achievements') ? 'AchievementsModule' : 'GoodDayModule'}.openModal('new')">
+            + Добавить запись
+        </div>
+        <div class="ls-list">${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет...</div>'}</div>
+    </div>
+    ${this.editingId ? this.renderModal() : ''}
+`;
         if(this.editingId) this.initAutoResize();
     },
 
