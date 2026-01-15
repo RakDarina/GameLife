@@ -67,8 +67,12 @@ const ListModule = {
         const styles = `
             <style>
                 .ls-wrap { animation: fadeIn 0.2s; padding-top: 10px; }
-                .ls-header { font-weight: 900; font-size: 28px; margin-bottom: 20px; }
                 
+                /* Уникальные стили для шапки благодарности */
+                .gr-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+                .gr-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
+                .gr-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; color: #1C1C1E; }
+
                 .ls-item { 
                     background: white; border-radius: 20px; padding: 18px; 
                     margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
@@ -121,7 +125,10 @@ const ListModule = {
 
         app.innerHTML = styles + `
             <div class="ls-wrap">
-                <div class="ls-header">${this.config.title}</div>
+                <div class="gr-header">
+                    <span class="material-icons-outlined gr-back-btn" onclick="loadModule('./mental.js')">chevron_left</span>
+                    <div class="gr-title">${this.config.title}</div>
+                </div>
                 <div class="ls-add-btn" onclick="ListModule.openModal('new')">+ Добавить запись</div>
                 <div class="ls-list">
                     ${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Здесь пока пусто...</div>'}
