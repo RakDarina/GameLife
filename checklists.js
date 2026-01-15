@@ -46,7 +46,7 @@ const Checklists = {
                         </div>
                     </div>
 
-                    <div class="ch-btn" onclick="alert('Раздел в разработке')">
+                    <div class="ch-btn" onclick="loadModule('./cleaning.js')">
                         <div class="ch-icon" style="background: linear-gradient(135deg, #5AC8FA, #007AFF);">
                             <span class="material-icons" style="font-size: 32px;">cleaning_services</span>
                         </div>
@@ -56,7 +56,7 @@ const Checklists = {
                         </div>
                     </div>
 
-                    <div class="ch-btn" onclick="alert('Раздел в разработке')">
+                    <div class="ch-btn" onclick="loadModule('./selfcare.js')">
                         <div class="ch-icon" style="background: linear-gradient(135deg, #FF2D55, #FF375F);">
                             <span class="material-icons" style="font-size: 32px;">self_improvement</span>
                         </div>
@@ -66,7 +66,7 @@ const Checklists = {
                         </div>
                     </div>
 
-                    <div class="ch-btn" onclick="alert('Раздел в разработке')">
+                    <div class="ch-btn" onclick="loadModule('./other.js')">
                         <div class="ch-icon" style="background: linear-gradient(135deg, #AF52DE, #BF5AF2);">
                             <span class="material-icons" style="font-size: 32px;">auto_awesome</span>
                         </div>
