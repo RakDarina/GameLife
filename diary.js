@@ -1,5 +1,5 @@
 /* ==========================================
-   ИСПРАВЛЕННЫЙ МОДУЛЬ: УДАЛЕНИЕ ИЗ СТАТИСТИКИ
+   ИСПРАВЛЕННЫЙ МОДУЛЬ: ДНЕВНИК С КНОПКОЙ НАЗАД
    ========================================== */
 
 const DiaryModule = {
@@ -42,17 +42,14 @@ const DiaryModule = {
         }
     },
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ
     deleteMood: function(date) {
-        // 1. Сначала закрываем модалку, чтобы она не "зависала"
         this.editingMoodDate = null; 
         this.render(); 
 
-        // 2. Вызываем подтверждение с небольшой задержкой, чтобы UI успел обновиться
         setTimeout(() => {
             if (confirm('Удалить отметку настроения за этот день?')) {
                 delete this.moodData[date];
-                this.save(); // Сохраняем и перерисовываем график
+                this.save();
             }
         }, 50);
     },
@@ -95,6 +92,12 @@ const DiaryModule = {
         const styles = `
             <style>
                 .dr-wrap { animation: fadeIn 0.2s; padding-top: 10px; }
+                
+                /* Уникальные стили для кнопки Назад в дневнике */
+                .dr-header-nav { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+                .dr-back-main { color: #007AFF; cursor: pointer; font-size: 28px; }
+                .dr-main-title { font-size: 24px; font-weight: 800; color: #1C1C1E; flex: 1; text-align: center; margin-right: 40px; }
+
                 .dr-card { background: white; border-radius: 25px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
                 .dr-card-title { font-weight: 800; font-size: 18px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
                 
@@ -152,6 +155,11 @@ const DiaryModule = {
 
         return `
             <div class="dr-wrap">
+                <div class="dr-header-nav">
+                    <span class="material-icons-outlined dr-back-main" onclick="loadModule('./mental.js')">chevron_left</span>
+                    <div class="dr-main-title">Дневник</div>
+                </div>
+
                 <div class="dr-card">
                     <div class="dr-card-title">
                         <span>Настроение</span>
@@ -172,7 +180,7 @@ const DiaryModule = {
                 </div>
 
                 <div class="dr-nav-row">
-                    <span style="font-weight:900; font-size:22px;">Дневник</span>
+                    <span style="font-weight:900; font-size:22px;">Записи</span>
                     <div class="dr-month-display">
                         <span class="material-icons-outlined" style="cursor:pointer" onclick="DiaryModule.changeMonth(-1)">chevron_left</span>
                         <span style="min-width:100px; text-align:center;">${months[this.viewMonth]}</span>
