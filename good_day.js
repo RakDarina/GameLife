@@ -53,7 +53,12 @@ const GoodDayModule = {
         const styles = `
             <style>
                 .ls-wrap { animation: fadeIn 0.2s; padding-top: 10px; }
-                .ls-header { font-weight: 900; font-size: 28px; margin-bottom: 20px; color: #1C1C1E; }
+
+                /* Уникальные стили для шапки Хорошее за день */
+                .gd-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+                .gd-back-btn { color: #007AFF; cursor: pointer; font-size: 28px; }
+                .gd-title { font-size: 24px; font-weight: 800; flex: 1; text-align: center; margin-right: 40px; color: #1C1C1E; }
+
                 .ls-item { background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; cursor: pointer; }
                 .ls-number { font-weight: 800; color: #5856D6; min-width: 25px; font-size: 16px; margin-right: 8px; line-height: 1.5; }
                 .ls-content { flex: 1; }
@@ -84,7 +89,10 @@ const GoodDayModule = {
 
         app.innerHTML = styles + `
             <div class="ls-wrap">
-                <div class="ls-header">${this.config.title}</div>
+                <div class="gd-header">
+                    <span class="material-icons-outlined gd-back-btn" onclick="loadModule('./mental.js')">chevron_left</span>
+                    <div class="gd-title">${this.config.title}</div>
+                </div>
                 <div class="ls-add-btn" onclick="GoodDayModule.openModal('new')">+ Записать хорошее</div>
                 <div class="ls-list">${listHtml || '<div style="text-align:center; color:#8E8E93; margin-top:40px;">Записей пока нет...</div>'}</div>
             </div>
