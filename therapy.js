@@ -53,11 +53,15 @@ const TherapyModule = {
         const styles = `
             <style>
                 .th-container { animation: fadeIn 0.3s; color: #1c1c1e; padding-bottom: 50px; }
-                .th-back { color: var(--blue); cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; font-weight: 500; }
                 
+                /* Унифицированный заголовок со стрелочкой */
+                .th-header-nav { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-top: 10px; }
+                .th-back-arrow { color: #007AFF; cursor: pointer; font-size: 28px; }
+                .th-main-title { font-size: 24px; font-weight: 800; color: #1C1C1E; flex: 1; text-align: center; margin-right: 40px; }
+
                 /* Кнопка записи */
                 .th-book-btn { 
-                    background: var(--blue); color: white; border: none; width: 100%; 
+                    background: #5856D6; color: white; border: none; width: 100%; 
                     padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 600; 
                     margin-bottom: 25px; cursor: pointer; box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
                 }
@@ -72,9 +76,9 @@ const TherapyModule = {
                     aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
                     border-radius: 50%; font-size: 14px; cursor: pointer; position: relative; transition: 0.2s;
                 }
-                .th-day.visited { background: #E5E5EA; color: #000; font-weight: bold; border: 2px solid var(--blue); }
-                .th-day.suggested { border: 2px dashed var(--blue); color: var(--blue); font-weight: bold; }
-                .th-day.today { background: #f2f2f7; color: var(--blue); text-decoration: underline; }
+                .th-day.visited { background: #E5E5EA; color: #000; font-weight: bold; border: 2px solid #5856D6; }
+                .th-day.suggested { border: 2px dashed #5856D6; color: #5856D6; font-weight: bold; }
+                .th-day.today { background: #f2f2f7; color: #5856D6; text-decoration: underline; }
                 .th-day:active { transform: scale(0.9); }
 
                 /* Инфо-блок */
@@ -83,7 +87,9 @@ const TherapyModule = {
                     display: flex; flex-direction: column; align-items: center; gap: 8px;
                 }
                 .th-info-label { font-size: 14px; color: #8e8e93; }
-                .th-info-date { font-size: 18px; font-weight: 700; color: var(--blue); }
+                .th-info-date { font-size: 18px; font-weight: 700; color: #5856D6; }
+                
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             </style>
         `;
 
@@ -114,19 +120,20 @@ const TherapyModule = {
         app.innerHTML = `
             ${styles}
             <div class="th-container">
-                <div class="th-back" onclick="loadModule('./mental.js')">
-                    <span class="material-icons-outlined">chevron_left</span> Назад
+                <div class="th-header-nav">
+                    <span class="material-icons-outlined th-back-arrow" onclick="loadModule('./mental.js')">chevron_left</span>
+                    <div class="th-main-title">Психотерапевт</div>
                 </div>
 
                 <button class="th-book-btn" onclick="window.open('https://prodoctorov.ru/samara/vrach/468194-ivanova/#speciality=psihoterapevt%23filter=default', '_blank')">
-                    Записаться к психотерапевту
+                    Записаться на прием
                 </button>
 
                 <div class="th-cal-card">
                     <div class="th-cal-header">
-                        <span class="material-icons-outlined" onclick="TherapyModule.changeMonth(-1)">chevron_left</span>
+                        <span class="material-icons-outlined" style="cursor:pointer" onclick="TherapyModule.changeMonth(-1)">chevron_left</span>
                         <b style="text-transform: capitalize;">${this.currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}</b>
-                        <span class="material-icons-outlined" onclick="TherapyModule.changeMonth(1)">chevron_right</span>
+                        <span class="material-icons-outlined" style="cursor:pointer" onclick="TherapyModule.changeMonth(1)">chevron_right</span>
                     </div>
                     <div class="th-cal-grid">
                         <div class="th-weekday">Пн</div><div class="th-weekday">Вт</div><div class="th-weekday">Ср</div>
@@ -136,7 +143,7 @@ const TherapyModule = {
                 </div>
 
                 <div class="th-info-card">
-                    <div class="th-info-label">Лучше записаться на:</div>
+                    <div class="th-info-label">Следующий визит (рекомендация):</div>
                     <div class="th-info-date">${nextDateStr}</div>
                 </div>
             </div>
@@ -144,7 +151,7 @@ const TherapyModule = {
     },
 };
 
-window.TherapyModule = TherapyModule; // Чтобы onclick в HTML видел методы
+window.TherapyModule = TherapyModule;
 
 export function render() {
     TherapyModule.init();
