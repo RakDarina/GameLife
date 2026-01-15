@@ -64,7 +64,7 @@ const ListsModule = {
                             <div class="ls-hub-icon" style="background: #5856D6;">
                                 <span class="material-icons">format_list_bulleted</span>
                             </div>
-                            <div class="ls-hub-btn-text">Списки дел / покупок</div>
+                            <div class="ls-hub-btn-text">Списки</div>
                         </div>
 
                         <div class="ls-hub-btn" onclick="ListsModule.currentView = 'checklists'; ListsModule.render()">
@@ -89,11 +89,11 @@ const ListsModule = {
             <div class="ls-hub-wrap">
                 <div class="ls-hub-header">
                     <span class="material-icons-outlined ls-hub-back" onclick="ListsModule.currentView = 'hub'; ListsModule.render()">chevron_left</span>
-                    <div class="ls-hub-title">Списки дел</div>
+                    <div class="ls-hub-title">Списки</div>
                 </div>
                 <div style="text-align:center; color:#8E8E93; margin-top:50px;">
                     <span class="material-icons" style="font-size:48px; opacity:0.5;">construction</span>
-                    <p>Раздел "Списки дел" в разработке</p>
+                    <p>Раздел "Списки" в разработке</p>
                 </div>
             </div>
         `;
