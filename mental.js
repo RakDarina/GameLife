@@ -7,9 +7,43 @@ const MentalPage = {
         this.render();
     },
 
+    // Функция проверки: была ли запись сегодня?
+    checkDailyStatus: function(storageKey) {
+        try {
+            const rawData = localStorage.getItem(storageKey);
+            if (!rawData) return false;
+
+            const data = JSON.parse(rawData);
+            if (!Array.isArray(data)) return false;
+
+            // Генерируем сегодняшнюю дату в формате DD.MM.YYYY
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const todayStr = `${day}.${month}.${year}`;
+
+            // Проверяем, есть ли хоть одна запись с такой датой
+            // (Предполагаем, что у ваших записей есть поле date)
+            return data.some(item => item.date === todayStr);
+        } catch (e) {
+            console.error('Ошибка проверки статуса для', storageKey, e);
+            return false;
+        }
+    },
+
     render: function() {
         const app = document.getElementById('app-viewport');
         
+        // 1. ПРОВЕРЯЕМ СТАТУС (были ли записи сегодня?)
+        // ! ПРОВЕРЬТЕ КЛЮЧИ НИЖЕ: они должны совпадать с тем, как вы сохраняете данные в gratitude.js и diary.js
+        const hasGratitudeToday = this.checkDailyStatus('gratitude_entries'); 
+        const hasDiaryToday = this.checkDailyStatus('diary_entries');
+
+        // Логика отображения точки (показываем, если записи НЕТ)
+        const gratitudeBadge = !hasGratitudeToday ? '<span class="me-status-dot"></span>' : '';
+        const diaryBadge = !hasDiaryToday ? '<span class="me-status-dot"></span>' : '';
+
         const styles = `
             <style>
                 .me-container { 
@@ -42,6 +76,7 @@ const MentalPage = {
                     border: 1px solid #f1f2f6;
                     cursor: pointer;
                     transition: transform 0.2s, box-shadow 0.2s;
+                    position: relative; /* Важно для позиционирования точки */
                 }
                 .me-card:active {
                     transform: scale(0.95);
@@ -57,11 +92,30 @@ const MentalPage = {
                     color: #2d3436;
                     line-height: 1.2;
                 }
-                /* Специальный стиль для дневника на всю ширину, если нужно */
+                /* Стиль для дневника на всю ширину */
                 .me-card.wide {
                     grid-column: span 2;
                     flex-direction: row;
                     gap: 15px;
+                }
+                
+                /* === НОВЫЙ СТИЛЬ: КРАСНАЯ ТОЧКА === */
+                .me-status-dot {
+                    position: absolute;
+                    top: 15px;
+                    right: 15px;
+                    width: 10px;
+                    height: 10px;
+                    background-color: #ff4757; /* Яркий красный/розовый */
+                    border-radius: 50%;
+                    box-shadow: 0 0 0 2px #fff; /* Белая обводка, чтобы не сливалось */
+                    animation: pulseDot 2s infinite;
+                }
+
+                @keyframes pulseDot {
+                    0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); }
+                    70% { box-shadow: 0 0 0 6px rgba(255, 71, 87, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
                 }
             </style>
         `;
@@ -78,6 +132,7 @@ const MentalPage = {
                     </div>
                     
                     <div class="me-card" onclick="loadModule('./gratitude.js')">
+                        ${gratitudeBadge}
                         <span class="me-icon">🙏</span>
                         <span class="me-name">Благодарность</span>
                     </div>
@@ -108,6 +163,7 @@ const MentalPage = {
                     </div>
                     
                     <div class="me-card wide" onclick="loadModule('./diary.js')">
+                        ${diaryBadge}
                         <span class="me-icon">📔</span>
                         <span class="me-name">Дневник</span>
                     </div>
