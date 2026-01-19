@@ -104,9 +104,11 @@ const SimpleLists = {
 
     // --- УПРАВЛЕНИЕ ЗАПИСЯМИ ---
 
-    saveItem: function() {
+   saveItem: function() {
         const list = this.meta.find(l => l.id === this.activeListId);
-        const title = document.getElementById('sl-item-title').value;
+        // Безопасное получение заголовка
+        const titleInput = document.getElementById('sl-item-title');
+        const title = titleInput ? titleInput.value : '';
         
         if (!title.trim()) return alert('Введите название');
 
@@ -114,40 +116,54 @@ const SimpleLists = {
         const itemData = {
             id: this.editingItemId === 'new' ? Date.now() : this.editingItemId,
             title: title,
-            note: document.getElementById('sl-item-note').value,
-            created: this.editingItemId === 'new' ? new Date().toISOString() : (this.items[this.activeListId].find(i=>i.id == this.editingItemId).created)
+            note: document.getElementById('sl-item-note')?.value || '',
+            // Сохраняем дату создания или берем текущую
+            created: this.editingItemId === 'new' ? new Date().toISOString() : (
+                (this.items[this.activeListId].find(i => i.id == this.editingItemId) || {}).created || new Date().toISOString()
+            )
         };
 
-        if (list.schema.hasRating) itemData.rating = parseInt(document.querySelector('.sl-star.active')?.dataset.val || 0);
-        if (list.schema.hasStatus) itemData.status = document.getElementById('sl-item-status').value;
-        if (list.schema.hasDateStart) itemData.dateStart = document.getElementById('sl-item-d-start').value;
-        if (list.schema.hasDateEnd) itemData.dateEnd = document.getElementById('sl-item-d-end').value;
-        if (list.schema.hasSeries) {
-            itemData.season = document.getElementById('sl-item-season').value;
-            itemData.episode = document.getElementById('sl-item-episode').value;
+        // --- ИСПРАВЛЕНИЕ РЕЙТИНГА (Считаем количество звезд) ---
+        if (list.schema.hasRating) {
+            // Ищем все звезды с классом active внутри блока ввода рейтинга
+            const activeStars = document.querySelectorAll('.sl-rate-input .sl-star.active');
+            itemData.rating = activeStars.length; 
         }
-        if (list.schema.hasPage) itemData.page = document.getElementById('sl-item-page').value;
-        if (list.schema.hasPrice) itemData.price = document.getElementById('sl-item-price').value;
+
+        // Остальные поля с безопасной проверкой (?.value)
+        if (list.schema.hasStatus) itemData.status = document.getElementById('sl-item-status')?.value;
+        if (list.schema.hasDateStart) itemData.dateStart = document.getElementById('sl-item-d-start')?.value;
+        if (list.schema.hasDateEnd) itemData.dateEnd = document.getElementById('sl-item-d-end')?.value;
         
-        // Фото обрабатываем отдельно (если загружено новое)
-        const photoInput = document.getElementById('sl-item-photo');
+        if (list.schema.hasSeries) {
+            itemData.season = document.getElementById('sl-item-season')?.value;
+            itemData.episode = document.getElementById('sl-item-episode')?.value;
+        }
+        if (list.schema.hasPage) itemData.page = document.getElementById('sl-item-page')?.value;
+        if (list.schema.hasPrice) itemData.price = document.getElementById('sl-item-price')?.value;
+        
+        // Внутренняя функция финализации
         const saveAndClose = () => {
             let items = this.items[this.activeListId] || [];
+            
             if (this.editingItemId === 'new') {
-                items.unshift(itemData);
+                items.unshift(itemData); // Добавляем в начало
             } else {
                 const idx = items.findIndex(i => i.id == this.editingItemId);
                 if (idx !== -1) {
-                    // Сохраняем старое фото если новое не выбрано
+                    // Если фото не меняли, оставляем старое
                     if (!itemData.photo) itemData.photo = items[idx].photo; 
                     items[idx] = itemData;
                 }
             }
+            
             this.items[this.activeListId] = items;
-            this.view = 'view-list';
-            this.save();
+            this.view = 'view-list'; // Принудительно меняем экран
+            this.save(); // Сохраняем и перерисовываем
         };
 
+        // Обработка фото
+        const photoInput = document.getElementById('sl-item-photo');
         if (list.schema.hasPhoto && photoInput && photoInput.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -156,6 +172,7 @@ const SimpleLists = {
             };
             reader.readAsDataURL(photoInput.files[0]);
         } else {
+            // Если фото нет или не выбрано — просто сохраняем
             saveAndClose();
         }
     },
