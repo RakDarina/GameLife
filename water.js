@@ -123,6 +123,10 @@ const WaterPage = {
                 .w-controls { display: flex; justify-content: center; gap: 30px; margin-top: 20px; }
                 .w-btn-circle { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
                 
+                .w-quick-presets { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+                .w-btn-preset { padding: 10px 20px; background: #fff; border: 1.5px solid #007AFF; color: #007AFF; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+                .w-btn-preset:active { background: #007AFF; color: #fff; }
+
                 .w-tabs { display: flex; background: #E5E5EA; padding: 2px; border-radius: 10px; margin-bottom: 20px; }
                 .w-tab { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
                 .w-tab.active { background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -159,6 +163,11 @@ const WaterPage = {
                 <div class="w-controls">
                     <div class="w-btn-circle" style="background:#fff; color:#FF3B30; border:2px solid #FF3B30;" onclick="WaterPage.quickChange(-WaterPage.state.cupSize)">−</div>
                     <div class="w-btn-circle" style="background:#007AFF; color:#fff;" onclick="WaterPage.quickChange(WaterPage.state.cupSize)">+</div>
+                </div>
+
+                <div class="w-quick-presets">
+                    <div class="w-btn-preset" onclick="WaterPage.quickChange(250)">+ 250 мл</div>
+                    <div class="w-btn-preset" onclick="WaterPage.quickChange(330)">+ 330 мл</div>
                 </div>
             </div>`;
         }
