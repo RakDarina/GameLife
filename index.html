@@ -89,9 +89,14 @@
             <input type="number" id="app-year" value="2026" oninput="saveYear()" class="year-input">
         </div>
         <div class="top-btns">
+            <div class="todo-icon-btn" onclick="loadModule('./game_ai.js')">
+                <img src="icon3.png" alt="Game">
+            </div>
+            
             <div class="todo-icon-btn" onclick="loadModule('./todo_daily.js')">
                 <img src="icon2.png" alt="Tasks">
             </div>
+
             <div class="settings-btn" onclick="loadModule('./settings.js')">
                 <span class="material-icons-outlined">settings</span>
             </div>
